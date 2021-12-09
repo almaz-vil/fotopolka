@@ -97,16 +97,30 @@ class Fotoalmom {
      * @param response
      * @param param
      * @constructor
-     */
+     *
     PrintAllCaptionAlbom(response, param){
         var mas = new Array;
         mas=this.sqlite.run(`SELECT id, name, count FROM fould `);
-        response.write('<div class="polka-flex">');
+        response.write('<div class="polka-flex" id="alboms-polka" >');
         for(let fould of mas){
             response.write(`<div  class="polka"><a href="${param+"&floud="+fould.id}"><div class="albom">`);
             var fouldname=fould.name.split('foto/')[1];
             response.write(`${this.PrintCaptionAlbom(fouldname)}<br><b>{${fould.count}}</b>`);
             response.write('</div></a></div>')
+        }
+        response.write("</div>");
+
+    }
+    */
+    PrintAllCaptionAlbom(response){
+        var mas = new Array;
+        mas=this.sqlite.run(`SELECT id, name, count FROM fould `);
+        response.write('<div class="polka-flex" id="alboms-polka" >');
+        for(let fould of mas){
+            response.write(`<div  class="polka"><div class="albom" onclick="zapros_fotoalbom(${fould.id})">`);
+            var fouldname=fould.name.split('foto/')[1];
+            response.write(`${this.PrintCaptionAlbom(fouldname)}<br><b>{${fould.count}}</b>`);
+            response.write('</div></div>')
         }
         response.write("</div>");
 
@@ -158,6 +172,21 @@ class Fotoalmom {
         };
         return JSON.stringify(albom_vir);
     }
+    DeleteVirtualAlbom(id_vir_albom){
+        let sql = `DELETE FROM vir_file WHERE (id_vir_fould=?)`;
+        this.sqlite.run(sql, [id_vir_albom]);
+        var m = new Array();
+        let sql_select=`SELECT name FROM vir_fould WHERE id=?`;
+        m=this.sqlite.run(sql_select, [id_vir_albom]);
+        var count=m[0].count-1;
+        let sqlupdate = `DELETE FROM vir_fould WHERE id=?`;
+        this.sqlite.run(sqlupdate, [id_vir_albom]);
+        var albom_vir_deleten={
+            'name':m[0].name,
+            'id':id_vir_albom
+        };
+        return JSON.stringify(albom_vir_deleten);
+    }
     /**
      * Создание нового вируального альбома
      * @param name - имя виртуального альбома
@@ -175,6 +204,60 @@ class Fotoalmom {
                     'id':m[0].id
                     };
         return JSON.stringify(albom_vir);
+    }
+
+    ShowFoto(id_foto, foto, fould, id_fould, id_vir_fould, naprav){
+        if (id_vir_fould.includes('-1')) {
+            var fould = new Array();
+            fould = this.sqlite.run('SELECT name FROM fould WHERE id=?', [id_fould]);
+            var fouldname = fould[0].name;
+            var files = new Array();
+            files = this.sqlite.run(`SELECT id, name FROM file WHERE id_fould=?`, [id_fould]);
+            for (var i = 0; i < files.length; i+=1) {
+                if (files[i].id == id_foto) {
+                    switch (naprav) {
+                        case (naprav.match(/fotoend/) || {}).input:
+                            i == 0?i = files.length - 1:i = i - 1;
+                            break;
+                        case (naprav.match(/fotonext/) || {}).input:
+                            i == files.length - 1?i = 0:i = i + 1;
+                            break;
+                    }
+                    return JSON.stringify({
+                        id:files[i].id,
+                        name:files[i].name,
+                        fould:fouldname,
+                        vir_fould:id_vir_fould
+                    });
+                }
+            }
+        } else {
+            var fould = new Array();
+            fould = this.sqlite.run('SELECT name FROM vir_fould WHERE id=?', [id_vir_fould]);
+            var fouldname=fould[0].name;
+            let sql = `SELECT file.name, file.id, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
+            var files = new Array();
+            files=this.sqlite.run(sql, [id_vir_fould]);
+            for (var i = 0; i < files.length; i+=1) {
+                if (files[i].id == id_foto) {
+                    switch (naprav) {
+                        case (naprav.match(/fotoend/) || {}).input:
+                            i == 0 ? i = files.length - 1 : i = i - 1;
+                            break;
+                        case (naprav.match(/fotonext/) || {}).input:
+                            i == files.length - 1 ? i = 0 : i = i + 1;
+                            break;
+                    }
+                    var objJSON={
+                        id: files[i].id,
+                        name: files[i].name,
+                        fould: files[i].fould,
+                        vir_fould: id_vir_fould
+                    };
+                    return JSON.stringify(objJSON);
+                }
+            }
+        }
     }
     /**
      * Вывод фотографий фотоальбома
@@ -202,19 +285,18 @@ class Fotoalmom {
                     var hh=id_foto-1;
                     if(min==hh){
                         i_file=Number(max);
-                        this.check(1);
-                    }else {
+                     }else {
                         i_file=id_foto-1;
-                        this.check(2);
+
                     }
                     var i_file_end;
                     var h=id_foto+1;
                     if(max==h){
                         i_file_end=m[0].id;
-                        this.check(3);
+
                     }else {
                         i_file_end=Number(id_foto)+1;
-                        this.check(4);
+
                     }
 
                     var TekFoto ={

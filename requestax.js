@@ -50,13 +50,25 @@ function http_zapros(id_fould, foto) {
 function admin_panel_for_new_name_vir_fould(){
     var response=document.getElementById('info_vir_albom');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
-    `<div class="form_caption">Имя нового виртуального альбома</div>`+
-    `<input id="new_name_vir_fould_name" placeholder="Введити имя альбома">`+
-    `<button id="new_name_button"  onclick="var name=document.getElementById('new_name_vir_fould_name').value;`+
-                                            `zaprosPOST({'name': name, 'oper': 'new_vir_albom'}, new_vir_fotoalbom);`+
-                                            `document.getElementById('new_name_vir_fould').style.display='none'">Создать</button>`+
-    `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Отмена</button>`+
-    `</div></div>`;
+        `<div class="form_caption">Имя нового виртуального альбома</div>`+
+        `<input id="new_name_vir_fould_name" placeholder="Введити имя альбома">`+
+        `<button id="new_name_button"  onclick="var name=document.getElementById('new_name_vir_fould_name').value;`+
+        `zaprosPOST({'name': name, 'oper': 'new_vir_albom'}, new_vir_fotoalbom);`+
+        `document.getElementById('new_name_vir_fould').style.display='none'">Создать</button>`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Отмена</button>`+
+        `</div></div>`;
+
+}
+function admin_panel_for_delete_vir_fould(){
+    var response=document.getElementById('info_vir_albom');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Удалить виртуальный альбом?</div>`+
+        `<img src="vopros.png">`+
+        `<button id="new_name_button"  onclick="var name=document.getElementById('new_name_vir_fould_name').value;`+
+        `zaprosPOST({'name': name, 'oper': 'new_vir_albom'}, new_vir_fotoalbom);`+
+        `document.getElementById('new_name_vir_fould').style.display='none'">Удалить</button>`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Отмена</button>`+
+        `</div></div>`;
 
 }
 
@@ -75,10 +87,75 @@ function zapros_admin_vir_fotoalbom(id_fould) {
     zaprosPOST({"fould": id_fould, "oper": "vir_f"}, alboms_vir_print_admin)
 }
 
-function pplus(){
+function zapros_vir_fotoalbom(id_fould) {
+    zaprosPOST({"fould": id_fould, "oper": "vir_albom"}, albom_vir_print)
+}
+
+function zapros_fotoalbom(id_fould) {
+    zaprosPOST({"fould": id_fould, "oper": "albom"}, albom_vir_print)
+}
+
+function albom_vir_print(objJSON){
+    var text="";
+    text=`<div class="ziro"><button onclick="pplus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">+</button>`+
+        `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">-</button></div><br>` +
+        '<div id="albom_admin_foto">';
+    for( let foto of objJSON){
+        text=text+`<div  class="polka"><div class="albom" style="background-image: url('${foto.fould}${foto.foto}'); `+
+        `background-position: bottom; background-repeat:no-repeat; background-size: contain;"><img src="check.png" draggable="false" data-id_fould="${foto.fould_id}" data-id_foto="${foto.id}" data-foto="${foto.foto}"`+
+        `data-fould="${foto.fould}" data-id_vir_fould="${foto.id_vir_fould}" onclick="open_foto(this.dataset)"  style="width: 100%; opacity: 0%; height: 100%;"></div></div>`;
+    }
+    text=text+'</div>';
+    document.getElementById('alboms-polka').innerHTML=text;
+    document.getElementById('alboms-polka').style.display="flex";
+}
+function open_foto(dataset){
+    var text="";
+
+    var s=`<div class="pilot" id="fotoend" data-id_fould="${dataset.id_fould}" data-id_foto="${dataset.id_foto}" data-foto="${dataset.foto}" data-fould="${dataset.fould}" data-id_vir_fould="${dataset.id_vir_fould}" onclick="zaprosPOST({'oper': 'showfoto', 'naprav': this.id, 'id_foto': this.dataset.id_foto, 'foto': this.dataset.foto, 'fould': this.dataset.fould, 'id_fould': this.dataset.id_fould, 'id_vir_fould': this.dataset.id_vir_fould},open_foto_next);">Назад</div>`;
+    var ss=`<div class="pilot" id="fotonext" data-id_fould="${dataset.id_fould}" data-id_foto="${dataset.id_foto}" data-foto="${dataset.foto}" data-fould="${dataset.fould}" data-id_vir_fould="${dataset.id_vir_fould}" onclick="zaprosPOST({'oper': 'showfoto', 'naprav': this.id, 'id_foto': this.dataset.id_foto, 'foto': this.dataset.foto, 'fould': this.dataset.fould, 'id_fould': this.dataset.id_fould, 'id_vir_fould': this.dataset.id_vir_fould},open_foto_next);">Вперёд</div>`;
+    text=`<div class="image"  id="image">${s}`+
+    `<div id="foto" onclick=" var link = document.createElement('a');
+            link.setAttribute('href', '${dataset.fould}${dataset.foto}');
+            link.setAttribute('download','${dataset.foto}');
+            onload=link.click();
+            " style="background-image: url('${dataset.fould}${dataset.foto}'); background-position: center; background-repeat:no-repeat; background-size: contain; flex: 4;"></div>`+
+    `${ss}</div>`;
+
+    document.getElementById('alboms-polka').innerHTML=text;
+    document.getElementById('alboms-polka').style.display="block";
+}
+
+function open_foto_next(objJSON){
+console.dir(objJSON);
+    document.getElementById('foto').style.backgroundImage=`url("${objJSON.fould+objJSON.name}")`;
+    document.getElementById('fotoend').dataset.id_foto=objJSON.id;
+    document.getElementById('fotoend').dataset.foto=objJSON.name;
+    document.getElementById('fotoend').dataset.fould=objJSON.fould;
+    document.getElementById('fotonext').dataset.id_foto=objJSON.id;
+    document.getElementById('fotonext').dataset.foto=objJSON.name;
+    document.getElementById('fotonext').dataset.fould=objJSON.fould;
+}
+function zapros_admin_delete_vir_fotoalbom(id_fould) {
+    zaprosPOST({"fould": id_fould, "oper": "vir_albom_delete"}, delete_vir_albon);
+}
+
+function delete_vir_albon(objJSON){
+    var response=document.getElementById('info_vir_albom');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Виртуальный альбом удалён!</div>`+
+        `<img src="znak_ok.png" width="256">`+
+        `Виртуальный альбом "${objJSON.name}" удалён!`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
+        `</div></div>`;
+    var info= document.getElementById('info_vir_albom');
+    info.dataset.id_vir_albom="undefined";
+
+
+}
+
+function pplus(albom=document.getElementById('albom_admin').getElementsByClassName('albom')){
     clearbackgroudpolka();
-    var admin_albom=document.getElementById('albom_admin');
-    var albom=admin_albom.getElementsByClassName('albom');
     for (al of albom) {
         var h=al.offsetHeight;
         var hh=h*2;
@@ -88,10 +165,8 @@ function pplus(){
     }
 }
 
-function mminus(){
+function mminus(albom=document.getElementById('albom_admin').getElementsByClassName('albom')){
     clearbackgroudpolka();
-    var admin_albom=document.getElementById('albom_admin');
-    var albom=admin_albom.getElementsByClassName('albom');
     for (al of albom) {
         var h=al.offsetHeight;
         var hh=h/2;
@@ -168,6 +243,17 @@ function check() {
     }
 }
 
+
+function  alboms_vit_print(objJSON){
+    var  text="";
+    for(let fould of objJSON){
+        text=text+`<div  class="polka"><div class="albom" onclick="zapros_vir_fotoalbom(${fould.id})">`+
+        `${fould.name}<br><b>{${fould.count}}</b>`+
+        '</div></div>';
+    }
+    document.getElementById('alboms-polka').innerHTML=text;
+    document.getElementById('alboms-polka').style.display="flex";
+}
 function delete_insert_foto_vir_albom(objJSON){
     var info= document.getElementById('info_vir_albom');
     info.dataset.tag=objJSON.id;
@@ -175,10 +261,10 @@ function delete_insert_foto_vir_albom(objJSON){
 }
 
 function alboms_print_admin(objJSON){
-    console.log(objJSON);
     var fouldname=objJSON[0].fould;
     var text=`<div class="ziro"><button onclick="pplus()">+</button>`+
         `<div class="caption">${PrintCaptionAlbom(fouldname.split('foto/')[1])}</div> <button onclick="mminus()">-</button><br></div>` +
+        //`<div class="ziro"> </div> `+
         '<div id="albom_admin_foto">';
     var info= document.getElementById('info_vir_albom');
     for( let foto of objJSON){
@@ -194,11 +280,11 @@ function alboms_print_admin(objJSON){
 function alboms_vir_print_admin(objJSON){
     var text="";
     if (objJSON[0].id==="-1"){
-         text=`<div id="albom_admin_foto"> В альбоме <b>${objJSON[0].name}</b> нет фотографий!</div>`;
+         text=`<div id="albom_admin_foto"> В альбоме <b>${objJSON[0].name}</b> нет фотографий!<br><div><button onclick="">Переименовать</button><button onclick="admin_panel_for_delete_vir_fould()">Удалить</button></div></div>`;
     }
     else{
         text=`<div class="ziro"><button onclick="pplus()">+</button>`+
-            `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br></div>` +
+            `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br><div><button onclick="">Переименовать</button><button onclick="admin_panel_for_delete_vir_fould()">Удалить</button></div></div>` +
             '<div id="albom_admin_foto">';
         var info= document.getElementById('info_vir_albom');
         for( let foto of objJSON){

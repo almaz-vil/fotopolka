@@ -10,7 +10,21 @@ class Admin {
         this.sqlite=sqlite;
         this.url = require('url');
     }
-
+    /**
+     * Обработка имени фотоальбома
+     * @param name вида 1/2/1/3
+     * @returns {string} вида 3 1 2 1
+     * @constructor
+     */
+    CaptionAlbom(name){
+        var masfo ="";
+        var mas_str =name.split('/').reverse();
+        for( let str of mas_str){
+            if(!(str.includes('foto')))
+                masfo=`${str} `+masfo;
+        }
+        return masfo;
+    }
     /**
      * Список фотографий в альбоме для AJAX
      * @param id_fould - альбом
@@ -29,7 +43,10 @@ class Admin {
             var fotot ={
                 id:`${foto.id}`,
                 fould:`${fouldname}`,
+                fould_id:`${id_fould}`,
                 foto:`${foto.name}`,
+                name:`${this.CaptionAlbom(fouldname)}`,
+                id_vir_fould:`-1`,
                 chesk:false
             };
             var vir_file = new Array();
@@ -39,6 +56,7 @@ class Admin {
             }
             JSONMas.push(fotot);
         }
+
         return JSON.stringify(JSONMas);
     }
 
@@ -60,6 +78,7 @@ class Admin {
             var fotot ={
                 id:`${foto.id}`,
                 fould:`${foto.fould}`,
+                fould_id:`-1`,
                 foto:`${foto.name}`,
                 name:`${fouldname}`,
                 id_vir_fould:`${id_vir_fould}`
@@ -70,11 +89,22 @@ class Admin {
             var fotot ={
                 id:`-1`,
                 fould:`-1`,
+                fould_id:`-1`,
                 foto:`-1`,
                 name:`${fouldname}`,
                 id_vir_fould:`${id_vir_fould}`
             };
             JSONMas.push(fotot);
+        }
+        return JSON.stringify(JSONMas);
+    }
+
+    json_vir_alboms(){
+        var mas = new Array;
+        mas=this.sqlite.run(`SELECT id, name, count FROM vir_fould `);
+        var JSONMas = new Array();
+        for(let fould of mas){
+            JSONMas.push({name:`${fould.name}`, count:`${fould.count}`, id:`${fould.id}`});
         }
         return JSON.stringify(JSONMas);
     }
@@ -86,7 +116,7 @@ class Admin {
     panel_show_vir_albom(response){
         var mas = new Array;
         mas=this.sqlite.run(`SELECT id, name, count FROM vir_fould `);
-        response.write('<div class="polka-flex">');
+        response.write('<div class="polka-flex" id="admin_vid_vir_alboms">');
         for(let fould of mas){
             response.write(`<div  class="polka" onclick="zapros_admin_vir_fotoalbom(${fould.id})"><div class="albom">`);
             response.write(`${fould.name}<br><b>{${fould.count}}</b>`);
