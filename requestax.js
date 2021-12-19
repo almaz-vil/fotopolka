@@ -9,7 +9,7 @@ function clearbackgroudpolka(){
 }
 var xmlHttp;
 //Функция создания объекта XMLHttpRequest
-function createXmlHttpRequestObject() {
+/*function createXmlHttpRequestObject() {
     var xmlHttp;
     try {
         xmlHttp=new XMLHttpRequest();
@@ -28,8 +28,8 @@ function createXmlHttpRequestObject() {
     }
     return xmlHttp;
 }
-//Отправка асинхронного НТТР-запроса
-function http_zapros(id_fould, foto) {
+*///Отправка асинхронного НТТР-запроса
+/*function http_zapros(id_fould, foto) {
     
  xmlHttp = createXmlHttpRequestObject();
 
@@ -47,6 +47,7 @@ function http_zapros(id_fould, foto) {
         }
     }       
 }
+*/
 function admin_panel_for_new_name_vir_fould(){
     var response=document.getElementById('info_vir_albom');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
@@ -64,8 +65,8 @@ function admin_panel_for_delete_vir_fould(){
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Удалить виртуальный альбом?</div>`+
         `<img src="vopros.png">`+
-        `<button id="new_name_button"  onclick="var name=document.getElementById('new_name_vir_fould_name').value;`+
-        `zaprosPOST({'name': name, 'oper': 'new_vir_albom'}, new_vir_fotoalbom);`+
+        `<button id="new_name_button"  onclick="var id=document.getElementById('info_vir_albom').dataset.tag;`+
+        `zaprosPOST({'id_vir_albom': id, 'oper': 'vir_albom_delete'}, delete_vir_albom);`+
         `document.getElementById('new_name_vir_fould').style.display='none'">Удалить</button>`+
         `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Отмена</button>`+
         `</div></div>`;
@@ -96,25 +97,32 @@ function zapros_fotoalbom(id_fould) {
 }
 
 function albom_vir_print(objJSON){
+    if (objJSON.length==0) return;
     var text="";
     text=`<div class="ziro"><button onclick="pplus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">+</button>`+
-        `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">-</button></div><br>` +
+        `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">-</button></div>` +
         '<div id="albom_admin_foto">';
     for( let foto of objJSON){
         text=text+`<div  class="polka"><div class="albom" style="background-image: url('${foto.fould}${foto.foto}'); `+
         `background-position: bottom; background-repeat:no-repeat; background-size: contain;"><img src="check.png" draggable="false" data-id_fould="${foto.fould_id}" data-id_foto="${foto.id}" data-foto="${foto.foto}"`+
-        `data-fould="${foto.fould}" data-id_vir_fould="${foto.id_vir_fould}" onclick="open_foto(this.dataset)"  style="width: 100%; opacity: 0%; height: 100%;"></div></div>`;
+        `data-fould="${foto.fould}" data-datef="${foto.date}" data-id_vir_fould="${foto.id_vir_fould}" onclick="open_foto(this.dataset)"  style="width: 100%; opacity: 0%; height: 100%;"></div></div>`;
     }
     text=text+'</div>';
     document.getElementById('alboms-polka').innerHTML=text;
     document.getElementById('alboms-polka').style.display="flex";
+    document.getElementById('caps_h1').style.display="none";
+    var menufind=document.getElementById('menufind');
+    if (menufind.style.visibility=="hidden"){
+        menufind.style.display="none";
+    }
 }
 function open_foto(dataset){
+    var caption=document.getElementsByClassName('caption')[0].innerHTML;
     var text="";
 
     var s=`<div class="pilot" id="fotoend" data-id_fould="${dataset.id_fould}" data-id_foto="${dataset.id_foto}" data-foto="${dataset.foto}" data-fould="${dataset.fould}" data-id_vir_fould="${dataset.id_vir_fould}" onclick="zaprosPOST({'oper': 'showfoto', 'naprav': this.id, 'id_foto': this.dataset.id_foto, 'foto': this.dataset.foto, 'fould': this.dataset.fould, 'id_fould': this.dataset.id_fould, 'id_vir_fould': this.dataset.id_vir_fould},open_foto_next);">Назад</div>`;
     var ss=`<div class="pilot" id="fotonext" data-id_fould="${dataset.id_fould}" data-id_foto="${dataset.id_foto}" data-foto="${dataset.foto}" data-fould="${dataset.fould}" data-id_vir_fould="${dataset.id_vir_fould}" onclick="zaprosPOST({'oper': 'showfoto', 'naprav': this.id, 'id_foto': this.dataset.id_foto, 'foto': this.dataset.foto, 'fould': this.dataset.fould, 'id_fould': this.dataset.id_fould, 'id_vir_fould': this.dataset.id_vir_fould},open_foto_next);">Вперёд</div>`;
-    text=`<div class="image"  id="image">${s}`+
+    text=`<div id="date">"${caption}" ${dataset.datef}</div><div class="image"  id="image">${s}`+
     `<div id="foto" onclick=" var link = document.createElement('a');
             link.setAttribute('href', '${dataset.fould}${dataset.foto}');
             link.setAttribute('download','${dataset.foto}');
@@ -127,7 +135,6 @@ function open_foto(dataset){
 }
 
 function open_foto_next(objJSON){
-console.dir(objJSON);
     document.getElementById('foto').style.backgroundImage=`url("${objJSON.fould+objJSON.name}")`;
     document.getElementById('fotoend').dataset.id_foto=objJSON.id;
     document.getElementById('fotoend').dataset.foto=objJSON.name;
@@ -135,12 +142,10 @@ console.dir(objJSON);
     document.getElementById('fotonext').dataset.id_foto=objJSON.id;
     document.getElementById('fotonext').dataset.foto=objJSON.name;
     document.getElementById('fotonext').dataset.fould=objJSON.fould;
-}
-function zapros_admin_delete_vir_fotoalbom(id_fould) {
-    zaprosPOST({"fould": id_fould, "oper": "vir_albom_delete"}, delete_vir_albon);
+    document.getElementById('date').innerHTML=`"${objJSON.caption}" ${objJSON.data}`;
 }
 
-function delete_vir_albon(objJSON){
+function delete_vir_albom(objJSON){
     var response=document.getElementById('info_vir_albom');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Виртуальный альбом удалён!</div>`+
@@ -150,6 +155,9 @@ function delete_vir_albon(objJSON){
         `</div></div>`;
     var info= document.getElementById('info_vir_albom');
     info.dataset.id_vir_albom="undefined";
+    document.getElementById(`vir_albom_${objJSON.id}`).style.display="none";
+    var albom=document.getElementById('albom_admin');
+    albom.innerHTML="";
 
 
 }
@@ -177,18 +185,7 @@ function mminus(albom=document.getElementById('albom_admin').getElementsByClassN
 }
 
 
-/**
- * Обработка имени фотоальбома
- * @param name вида 1/2/1/3
- * @returns {string} вида 3 1 2 1
- * @constructor
- */
-function PrintCaptionAlbom(name){
-    var masfo ="";
-    var mas_str =name.split('/').reverse();
-    for( let str of mas_str){   masfo=`${str} `+masfo;     }
-    return masfo;
-}
+
 
 function zaprosPOST(params, readyfun){
     var xmlHttp;
@@ -230,29 +227,80 @@ function zaprosPOST(params, readyfun){
     }
 }
 
+function panelfind(panel) {
+    var panel1=document.getElementById('menufind1');
+    if (panel.style.visibility=="hidden"){
+        panel.style.display="inline-flex";
+        panel1.style.display="inline-flex";
+        panel.style.visibility="visible";
+        panel1.style.visibility="visible";
+    }else {
+        if(document.getElementById('caps_h1').style.display=="none") {
+            panel.style.display = "none";
+        }
+        panel1.style.display="none";
+        panel.style.visibility="hidden";
+        panel1.style.visibility="hidden";
+    }
+
+}
+
 function check() {
     var id_vir_albom=this.dataset.id_vir_albom;
     if(id_vir_albom=="undefined") return;
     var id_foto=this.dataset.id_foto;
     if (this.style.opacity=="0.75"){
         this.style.opacity="0";
-        zaprosPOST({"oper":"delete","id_vir_fould": id_vir_albom, "id_foto": id_foto}, delete_insert_foto_vir_albom);
+        zaprosPOST({"oper":"delete_","id_vir_fould": id_vir_albom, "id_foto": id_foto}, delete_insert_foto_vir_albom);
     }else {
         this.style.opacity="0.75";
         zaprosPOST({"oper":"insert","id_vir_fould": id_vir_albom, "id_foto": id_foto}, delete_insert_foto_vir_albom);
     }
 }
 
+function finddata(findinfoto) {
+    var date_ot=new  Date(document.getElementById('date_ot').value);
+    var date_do=new  Date(document.getElementById('date_do').value);
+    if(findinfoto) {
+        zaprosPOST({
+            "oper": "datefind",
+            "date_ot": date_ot.getTime(),
+            "date_do": date_do.getTime(),
+            "findinfoto": findinfoto
+        }, albom_vir_print);
+    } else {
+        zaprosPOST({
+            "oper": "datefind",
+            "date_ot": date_ot.getTime(),
+            "date_do": date_do.getTime(),
+            "findinfoto": findinfoto
+        }, alboms_print);
+    }
+}
 
 function  alboms_vit_print(objJSON){
     var  text="";
     for(let fould of objJSON){
         text=text+`<div  class="polka"><div class="albom" onclick="zapros_vir_fotoalbom(${fould.id})">`+
-        `${fould.name}<br><b>{${fould.count}}</b>`+
-        '</div></div>';
+            `${fould.caption}<br><b>{${fould.count}}</b>`+
+            '</div></div>';
     }
     document.getElementById('alboms-polka').innerHTML=text;
     document.getElementById('alboms-polka').style.display="flex";
+    document.getElementById('caps_h1').style.display="block";
+    document.getElementById('menufind').style.display="inline-flex";
+}
+function  alboms_print(objJSON){
+    var  text="";
+    for(let fould of objJSON){
+        text=text+`<div  class="polka"><div class="albom" onclick="zapros_fotoalbom(${fould.id})">`+
+            `${fould.caption}<br><b>{${fould.count}}</b>`+
+            '</div></div>';
+    }
+    document.getElementById('alboms-polka').innerHTML=text;
+    document.getElementById('alboms-polka').style.display="flex";
+    document.getElementById('caps_h1').style.display="block";
+    document.getElementById('menufind').style.display="inline-flex";
 }
 function delete_insert_foto_vir_albom(objJSON){
     var info= document.getElementById('info_vir_albom');
@@ -261,9 +309,8 @@ function delete_insert_foto_vir_albom(objJSON){
 }
 
 function alboms_print_admin(objJSON){
-    var fouldname=objJSON[0].fould;
     var text=`<div class="ziro"><button onclick="pplus()">+</button>`+
-        `<div class="caption">${PrintCaptionAlbom(fouldname.split('foto/')[1])}</div> <button onclick="mminus()">-</button><br></div>` +
+        `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br></div>` +
         //`<div class="ziro"> </div> `+
         '<div id="albom_admin_foto">';
     var info= document.getElementById('info_vir_albom');
@@ -299,6 +346,7 @@ function alboms_vir_print_admin(objJSON){
     albom.innerHTML=text;
 }
 //Функция обработки ответа сервера
+/*
 function obrabotka() {
     if (xmlHttp.readyState===4) {
         if (xmlHttp.status===200) {
@@ -319,14 +367,15 @@ function load(objJSON){
     fotonext.dataset.tag=objJSON['next'];
     fotoend.dataset.tag=objJSON['end'];   
 }
+*/
 
 /**
  * Получено информация о новом фотоальбоме
  * @param objJSON
  */
 function new_vir_fotoalbom(objJSON) {
-        var info= document.getElementById('info_vir_albom');
-        info.dataset.tag=objJSON.id;
-        info.innerHTML=`Имя текущего вирт альбома ${objJSON.name}`;
+    var info= document.getElementById('info_vir_albom');
+    info.dataset.tag=objJSON.id;
+    info.innerHTML=`Имя текущего вирт альбома ${objJSON.name}`;
 
 }

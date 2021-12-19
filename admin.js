@@ -5,6 +5,7 @@
 const fs = require("fs");
 const HeadlerParam = require("./urlparam");
 
+const ExifImage = require('exif-async');
 class Admin {
     constructor(sqlite) {
         this.sqlite=sqlite;
@@ -25,6 +26,21 @@ class Admin {
         }
         return masfo;
     }
+
+    TimeToStr(milsec){
+        var date = new Date(milsec);
+        var options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long',
+            timezone: 'UTC',
+            hour: 'numeric',
+            minute: 'numeric',
+        };
+        return  date.toLocaleString("ru", options);
+    }
+
     /**
      * Список фотографий в альбоме для AJAX
      * @param id_fould - альбом
@@ -34,7 +50,7 @@ class Admin {
      */
     AlbomInJSON(id_fould, id_vir_albom=-1){
         var files = new Array();
-        files=this.sqlite.run('SELECT name, id FROM file WHERE id_fould=?', [id_fould]);
+        files=this.sqlite.run('SELECT name, id, time FROM file WHERE id_fould=?', [id_fould]);
         var fould = new Array();
         fould = this.sqlite.run('SELECT name FROM fould WHERE id=?', [id_fould]);
         var fouldname=fould[0].name;
@@ -47,6 +63,8 @@ class Admin {
                 foto:`${foto.name}`,
                 name:`${this.CaptionAlbom(fouldname)}`,
                 id_vir_fould:`-1`,
+                date:this.TimeToStr(foto.time),
+                time:`${foto.time}`,
                 chesk:false
             };
             var vir_file = new Array();
@@ -70,7 +88,7 @@ class Admin {
         var fould = new Array();
         fould = this.sqlite.run('SELECT name FROM vir_fould WHERE id=?', [id_vir_fould]);
         var fouldname=fould[0].name;
-        let sql = `SELECT file.name, file.id, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
+        let sql = `SELECT file.name, file.time, file.id, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
         var m = new Array();
         m=this.sqlite.run(sql, [id_vir_fould]);
         var JSONMas = new Array();
@@ -81,7 +99,8 @@ class Admin {
                 fould_id:`-1`,
                 foto:`${foto.name}`,
                 name:`${fouldname}`,
-                id_vir_fould:`${id_vir_fould}`
+                id_vir_fould:`${id_vir_fould}`,
+                date: this.TimeToStr(foto.time)
             };
             JSONMas.push(fotot);
         }
@@ -99,12 +118,130 @@ class Admin {
         return JSON.stringify(JSONMas);
     }
 
+    FindDateAlbomJSON(date_ot,date_do, findinfo){
+        console.dir(findinfo);
+        var files = new Array();
+        var JSONMas = new Array();
+        if(findinfo) {
+            files = this.sqlite.run('SELECT name, id, time, id_fould FROM file WHERE ((time>?)AND(time<?)) LIMIT 100', [date_ot, date_do]);
+            for (let foto of files) {
+                var fould = new Array();
+                fould = this.sqlite.run('SELECT name FROM fould WHERE id=?', [foto.id_fould]);
+                var fouldname = fould[0].name;
+
+                var fotot = {
+                    id: `${foto.id}`,
+                    fould: `${fouldname}`,
+                    fould_id: `${foto.id_fould}`,
+                    foto: `${foto.name}`,
+                    name: `${this.CaptionAlbom(fouldname)}`,
+                    id_vir_fould: `-1`,
+                    date: this.TimeToStr(foto.time),
+                    time: `${foto.time}`,
+                    chesk: false
+                };
+                fould.slice();
+                JSONMas.push(fotot);
+            }
+        }else {
+            files = this.sqlite.run('SELECT name, id, time, id_fould FROM file WHERE ((time>?)AND(time<?)) GROUP BY id_fould', [date_ot, date_do]);
+            for (let foto of files) {
+                var fould = new Array();
+                fould = this.sqlite.run('SELECT name, id, count FROM fould WHERE id=?', [foto.id_fould]);
+                var fouldname = fould[0].name;
+                console.log(fouldname);
+                var fotot = {name:`${fould[0].name}`, caption:`${this.CaptionAlbom(fould[0].name)}`, count:`${fould[0].count}`, id:`${fould[0].id}`}
+                fould.slice();
+                JSONMas.push(fotot);
+
+            }
+        }
+        return JSON.stringify(JSONMas);
+    }
+
+    FindAlbomJSON(text, flag_vir='false'){
+        console.dir(flag_vir);
+        var mas = new Array;
+        switch (flag_vir) {
+            case (flag_vir.match(/false/) || {}).input:
+                mas = this.sqlite.run(`SELECT id, name, count FROM fould WHERE name LIKE ?`, ['%' + text + '%']);
+                break;
+            case (flag_vir.match(/true/) || {}).input:
+                mas=this.sqlite.run(`SELECT id, name, count FROM vir_fould WHERE name LIKE ?`,['%'+text+'%']);
+        }
+        if (mas.length<1){
+            let Tt=text.charAt(0).toUpperCase()+text.slice(1);
+            switch (flag_vir) {
+                case (flag_vir.match(/false/) || {}).input:
+                    mas = this.sqlite.run(`SELECT id, name, count FROM fould WHERE name LIKE ?`, ['%' + Tt + '%']);
+                    break;
+                case (flag_vir.match(/true/) || {}).input:
+                    mas=this.sqlite.run(`SELECT id, name, count FROM vir_fould WHERE name LIKE ?`,['%'+Tt+'%']);
+            }
+        }
+        var JSONMas = new Array();
+        for(let fould of mas){
+            switch (flag_vir) {
+                case (flag_vir.match(/false/) || {}).input:
+                    JSONMas.push({
+                        name: `${fould.name}`,
+                        caption: `${this.CaptionAlbom(fould.name)}`,
+                        count: `${fould.count}`,
+                        id: `${fould.id}`
+                    });
+                    break;
+                case (flag_vir.match(/true/) || {}).input:
+                    JSONMas.push({
+                        name: `${fould.name}`,
+                        caption: `${fould.name}`,
+                        count: `${fould.count}`,
+                        id: `${fould.id}`
+                    });
+            }
+        }
+        return JSON.stringify(JSONMas);
+
+    }
+
+    add_ixef(){
+        var files = new Array();
+        files=this.sqlite.run('SELECT file.id AS id, file.name AS file_name, fould.name AS fould_p FROM file, fould WHERE file.id_fould=fould.id');
+        for (let file of files){
+            console.dir(file);
+            (async () => {
+                try {
+                    const exif = await ExifImage(`${file.fould_p}${file.file_name}`);
+                    let sd=exif.exif.DateTimeOriginal;
+                    let m=sd.split(' ');
+                    let da=m[0].split(':');
+                    let ti=m[1].split(':');
+                    let data= new Date(da[0],Number(da[1])-1,da[2],ti[0],ti[1],ti[2]);
+                    this.sqlite.run('UPDATE file SET time=? WHERE id=?',[data.getTime(), file.id]);
+                    console.log(`${file.fould_p}${file.file_name} \t time:${exif.exif.DateTimeOriginal}\t time:${data.getDate()}`);
+                } catch (err) {
+                    console.log(err);
+                }
+            })();
+        }
+    console.log('Выход');
+    }
+
     json_vir_alboms(){
         var mas = new Array;
         mas=this.sqlite.run(`SELECT id, name, count FROM vir_fould `);
         var JSONMas = new Array();
         for(let fould of mas){
-            JSONMas.push({name:`${fould.name}`, count:`${fould.count}`, id:`${fould.id}`});
+            JSONMas.push({name:`${fould.name}`, caption:`${fould.name}`, count:`${fould.count}`, id:`${fould.id}`});
+        }
+        return JSON.stringify(JSONMas);
+    }
+
+    json_alboms(){
+        var mas = new Array;
+        mas=this.sqlite.run(`SELECT id, name, count FROM fould `);
+        var JSONMas = new Array();
+        for(let fould of mas){
+            JSONMas.push({name:`${fould.name}`, caption:`${this.CaptionAlbom(fould.name)}`, count:`${fould.count}`, id:`${fould.id}`});
         }
         return JSON.stringify(JSONMas);
     }
@@ -118,7 +255,7 @@ class Admin {
         mas=this.sqlite.run(`SELECT id, name, count FROM vir_fould `);
         response.write('<div class="polka-flex" id="admin_vid_vir_alboms">');
         for(let fould of mas){
-            response.write(`<div  class="polka" onclick="zapros_admin_vir_fotoalbom(${fould.id})"><div class="albom">`);
+            response.write(`<div  class="polka" id="vir_albom_${fould.id}" onclick="zapros_admin_vir_fotoalbom(${fould.id})"><div class="albom">`);
             response.write(`${fould.name}<br><b>{${fould.count}}</b>`);
             response.write('</div></div>')
         }

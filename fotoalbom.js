@@ -2,6 +2,7 @@
  * Класс фото
  */
 const HeadlerParam = require('./urlparam');
+const ExifImage = require('exif').ExifImage;
 
 
 class Fotoalmom {
@@ -19,7 +20,7 @@ class Fotoalmom {
      * @param param - номер фотографии
      * @constructor
      */
-    Imag(response, param){
+    /*Imag(response, param){
         let sql = `SELECT name, id FROM file WHERE id_fould=?`;
         let id_fould = HeadlerParam(param, "floud");
         var m = new Array();
@@ -63,7 +64,7 @@ class Fotoalmom {
             }
         }
     }
-
+*/
     /**
      * Вывод альбома
      * @param response
@@ -206,13 +207,58 @@ class Fotoalmom {
         return JSON.stringify(albom_vir);
     }
 
+    ReadEXIF(file){
+        console.log('EXIF');
+        try {
+            new ExifImage({ image : file }, function (error, exifData) {
+                if (error)
+                    console.log('Error: '+error.message);
+                else {
+                    console.dir(exifData);
+                    return exifData; // Do something with your data!
+                }
+            });
+        } catch (error) {
+            console.log('Error: ' + error.message);
+        }
+    }
+
+    /**
+     * Обработка имени фотоальбома
+     * @param name вида 1/2/1/3
+     * @returns {string} вида 3 1 2 1
+     * @constructor
+     */
+    CaptionAlbom(name){
+        var masfo ="";
+        var nam=name.split('foto/');
+        var mas_str =nam[1].split('/').reverse();
+        for( let str of mas_str){   masfo=`${str} `+masfo;     }
+        return masfo;
+    }
+
+    TimeToStr(milsec){
+        var date = new Date(milsec);
+        var options = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long',
+            timezone: 'UTC',
+            hour: 'numeric',
+            minute: 'numeric',
+        };
+          return  date.toLocaleString("ru", options);
+
+    }
+
     ShowFoto(id_foto, foto, fould, id_fould, id_vir_fould, naprav){
         if (id_vir_fould.includes('-1')) {
             var fould = new Array();
             fould = this.sqlite.run('SELECT name FROM fould WHERE id=?', [id_fould]);
             var fouldname = fould[0].name;
             var files = new Array();
-            files = this.sqlite.run(`SELECT id, name FROM file WHERE id_fould=?`, [id_fould]);
+            files = this.sqlite.run(`SELECT id, name, time FROM file WHERE id_fould=?`, [id_fould]);
             for (var i = 0; i < files.length; i+=1) {
                 if (files[i].id == id_foto) {
                     switch (naprav) {
@@ -223,19 +269,23 @@ class Fotoalmom {
                             i == files.length - 1?i = 0:i = i + 1;
                             break;
                     }
+
+
                     return JSON.stringify({
                         id:files[i].id,
                         name:files[i].name,
                         fould:fouldname,
-                        vir_fould:id_vir_fould
+                        caption:this.CaptionAlbom(fouldname),
+                        vir_fould:id_vir_fould,
+                        data: this.TimeToStr(files[i].time),
+                        time: files[i].time
                     });
                 }
             }
         } else {
             var fould = new Array();
             fould = this.sqlite.run('SELECT name FROM vir_fould WHERE id=?', [id_vir_fould]);
-            var fouldname=fould[0].name;
-            let sql = `SELECT file.name, file.id, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
+            let sql = `SELECT file.name, file.time, file.id, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
             var files = new Array();
             files=this.sqlite.run(sql, [id_vir_fould]);
             for (var i = 0; i < files.length; i+=1) {
@@ -252,7 +302,9 @@ class Fotoalmom {
                         id: files[i].id,
                         name: files[i].name,
                         fould: files[i].fould,
-                        vir_fould: id_vir_fould
+                        caption: fould[0].name,
+                        vir_fould: id_vir_fould,
+                        data: this.TimeToStr(files[i].time)
                     };
                     return JSON.stringify(objJSON);
                 }
@@ -266,7 +318,7 @@ class Fotoalmom {
      * @param id_foto - ид текущего фото
      * @constructor
      */
-    ImagAjax(response, id_fould, id_foto){
+   /* ImagAjax(response, id_fould, id_foto){
         let sql = `SELECT name, id FROM file WHERE id_fould=?`;
         var m = new Array();
         m=this.sqlite.run(sql, [id_fould]);
@@ -313,7 +365,7 @@ class Fotoalmom {
             }
         }
     }
-
+**/
 }
 
 module.exports=Fotoalmom;

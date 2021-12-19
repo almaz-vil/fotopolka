@@ -14,7 +14,6 @@ http.createServer(
         var param=request.url;
         if(admin.file_check(param)){  request.addListener('end', function(){ serverf.serve(request,response); }).resume();}
         else{
-
             if(HeadlerParam(param, "POST")>-1){
                 var body = '';
                 request.on('data', function (data) {
@@ -25,6 +24,9 @@ http.createServer(
                 request.on('end', function () {
                     var oper=JSON.parse(body)["oper"];
                     switch (oper) {
+                        case (oper.match(/alboms_/) || {}).input:
+                            admin.ResponeJSON(response, admin.json_alboms());
+                            break;
                         case (oper.match(/vir_alboms/) || {}).input:
                             admin.ResponeJSON(response, admin.json_vir_alboms());
                             break;
@@ -34,41 +36,37 @@ http.createServer(
                         case (oper.match(/albom/) || {}).input:
                             admin.ResponeJSON(response, admin.AlbomInJSON(JSON.parse(body)["fould"]));
                             break;
+                        case (oper.match(/findAlboms/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, admin.FindAlbomJSON(js.text, js.flag_vir));
+                            break;
+                        case (oper.match(/datefind/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, admin.FindDateAlbomJSON(js.date_ot, js.date_do, js.findinfoto));
+                            break;
                         case (oper.match(/showfoto/) || {}).input:
                             var js=JSON.parse(body);
-                            console.dir(js);
-                            //var ob={'id_foto': js['i']}
-                          admin.ResponeJSON(response, fotoalbom.ShowFoto(js.id_foto, js.foto, js.fould, js.id_fould, js.id_vir_fould, js.naprav ));
+                            admin.ResponeJSON(response, fotoalbom.ShowFoto(js.id_foto, js.foto, js.fould, js.id_fould, js.id_vir_fould, js.naprav ));
                             break;
                     }
                 });
             } else {
-                if (HeadlerParam(param, "ajax") > -1) {
-                    response.setHeader("Content-Type", "text/html; charset=utf-8;");
-                    fotoalbom.ImagAjax(response, HeadlerParam(param, "floud"), HeadlerParam(param, "foto"));
-                    response.end();
-                } else {
-
+                var data=new Date();
                     response.setHeader("Content-Type", "text/html; charset=utf-8;");
                     response.write("<!doctype html>");
                     response.write('<head><title>NODE JS приложение "Фотополка"</title><link rel="stylesheet" type="text/css" href="./c.css"><script type="text/javascript" src="requestax.js"></script></head>');
+                    response.write(`<div class="caps" id="caps"><div><h1 id="caps_h1">Фотополка</h1></div>`+
+                        `<div id="menufind1" style="visibility: visible"><label><input type="radio" name="find"  value="альбомах" id="find_in_albom">альбомах</label><label><input name="find" id="findinfoto" type="radio" checked="true" value="фотографиях" id="find_in_foto">фотографиях</label></div>`+
+                        `<div id="menufind" style="visibility: hidden"><input type="datetime-local" id="date_ot" onchange="finddata(document.getElementById('findinfoto').checked)"><input type="datetime-local" value="${data.toISOString().substring(0, 16)}" id="date_do" onchange="finddata(document.getElementById('findinfoto').checked);"><input id="find"  name="find" placeholder="Для поиска начните ввод." data-flag_vir="false" onkeyup="var t=this.value; {zaprosPOST({'oper':'findAlboms', 'text':t, 'flag_vir':this.dataset.flag_vir}, alboms_print)}"></div>`+
+                        `</div><div class="menu">`+
+                    `<div onclick="document.getElementById('find').dataset.flag_vir=true ;zaprosPOST({'oper':'vir_alboms'}, alboms_vit_print)">Виртуальные альбомы</div>`+
+                    `<div onclick="document.getElementById('find').dataset.flag_vir=false ;zaprosPOST({'oper':'alboms_'}, alboms_print)">Альбомы</div>`+
+                        `<div onclick="panelfind(document.getElementById('menufind'))">поиск</div>`+
 
-                    if (HeadlerParam(param, "floud") > -1) {
-                        if (HeadlerParam(param, "foto") > -1) {
-                            response.write(`<div class="menu"><div onclick="window.history.back()">Кнопка назад</div></div>`);
-                            fotoalbom.Imag(response, param);
-                        } else {
-                            response.write(`<div class="caps"><h1>Фотополка</h1><div class="menu"><div onclick="window.history.back()">Кнопка назад</div></div></div>`);
-
-                            fotoalbom.PrintAlbom(response, param);
-                        }
-                    } else {
-                        response.write(`<div class="caps"><h1>Фотополка</h1><div class="menu"><div onclick="zaprosPOST({'oper':'vir_alboms'}, alboms_vit_print)">Виртуальные альбомы</div></div></div>`);
-                        fotoalbom.PrintAllCaptionAlbom(response, param);
-                    }
+                    `</div>`);
+                    fotoalbom.PrintAllCaptionAlbom(response, param);
                     response.write("</html")
                     response.end("");
-                }
             }
         }
 
@@ -97,7 +95,7 @@ http.createServer(
                         case (oper.match(/insert/) || {}).input:
                             admin.ResponeJSON(response, fotoalbom.InsertInVirtualAlbom(JSON.parse(body)["id_vir_fould"],JSON.parse(body)["id_foto"]));
                             break;
-                        case (oper.match(/delete/) || {}).input:
+                        case (oper.match(/delete_/) || {}).input:
                             admin.ResponeJSON(response, fotoalbom.DeleteIzVirtualAlbom(JSON.parse(body)["id_vir_fould"],JSON.parse(body)["id_foto"]));
                             break;
                         case (oper.match(/fotoalbom/) || {}).input:
