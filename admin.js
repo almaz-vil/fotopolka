@@ -5,11 +5,15 @@
 const fs = require("fs");
 const HeadlerParam = require("./urlparam");
 
-const ExifImage = require('exif-async');
+const ExifImage = require('exif').ExifImage;
+const Console = require("console");
 class Admin {
     constructor(sqlite) {
         this.sqlite=sqlite;
         this.url = require('url');
+        this.max=-1;
+        this.min=-1;
+        this.websokcet=true;
     }
     /**
      * Обработка имени фотоальбома
@@ -118,8 +122,23 @@ class Admin {
         return JSON.stringify(JSONMas);
     }
 
+    FindDateMinMaxJSON(){
+       if (this.max===-1) {
+           let max = new Array();
+           max = this.sqlite.run('SELECT MAX(time) AS max FROM file');
+           this.max=max[0].max;
+       }
+       if (this.min===-1) {
+           let min = new Array();
+           min = this.sqlite.run('SELECT MIN(time) AS min FROM file');
+           this.min=min[0].min;
+       }
+
+       console.log(`max = ${this.max} \t min = ${this.min}` )
+       return JSON.stringify({max:`${this.max}`, min:`${this.min}`})
+    }
+
     FindDateAlbomJSON(date_ot,date_do, findinfo){
-        console.dir(findinfo);
         var files = new Array();
         var JSONMas = new Array();
         if(findinfo) {
@@ -149,7 +168,6 @@ class Admin {
                 var fould = new Array();
                 fould = this.sqlite.run('SELECT name, id, count FROM fould WHERE id=?', [foto.id_fould]);
                 var fouldname = fould[0].name;
-                console.log(fouldname);
                 var fotot = {name:`${fould[0].name}`, caption:`${this.CaptionAlbom(fould[0].name)}`, count:`${fould[0].count}`, id:`${fould[0].id}`}
                 fould.slice();
                 JSONMas.push(fotot);
@@ -160,7 +178,6 @@ class Admin {
     }
 
     FindAlbomJSON(text, flag_vir='false'){
-        console.dir(flag_vir);
         var mas = new Array;
         switch (flag_vir) {
             case (flag_vir.match(/false/) || {}).input:
@@ -203,12 +220,11 @@ class Admin {
 
     }
 
-    add_ixef(){
+    add_ixef(connection){
         var files = new Array();
         files=this.sqlite.run('SELECT file.id AS id, file.name AS file_name, fould.name AS fould_p FROM file, fould WHERE file.id_fould=fould.id');
         for (let file of files){
-            console.dir(file);
-            (async () => {
+             (async () => {
                 try {
                     const exif = await ExifImage(`${file.fould_p}${file.file_name}`);
                     let sd=exif.exif.DateTimeOriginal;
@@ -216,8 +232,8 @@ class Admin {
                     let da=m[0].split(':');
                     let ti=m[1].split(':');
                     let data= new Date(da[0],Number(da[1])-1,da[2],ti[0],ti[1],ti[2]);
-                    this.sqlite.run('UPDATE file SET time=? WHERE id=?',[data.getTime(), file.id]);
-                    console.log(`${file.fould_p}${file.file_name} \t time:${exif.exif.DateTimeOriginal}\t time:${data.getDate()}`);
+                    connection.send(data.getTime());
+                    //this.sqlite.run('UPDATE file SET time=? WHERE id=?',[data.getTime(), file.id]);
                 } catch (err) {
                     console.log(err);
                 }
@@ -309,9 +325,11 @@ class Admin {
      */
     panel_admin(response){
        // this.panel_for_new_name_vir_fould(response);
-        response.write('<div id="admin_grid">');
-        response.write('<div>Информация по базе<br><button onclick="admin_panel_for_new_name_vir_fould()">Новый виртуальный альбом</button> <div id="info_vir_albom"></div></div>');
-        response.write('<div><h1>Административная часть ФОТОПОЛКИ</h1></div>');
+        response.write('<div id="dialog"></div><div id="admin_grid">');
+        response.write(`<div><div class="menu_admin_osn"><div>Работа с базой данных</div><div class="menu_admin_button" onclick="admin_panel_for_new_name_vir_fould()" style="background-image: url('new_albom.png')" title="Новый виртуальный альбом"></div>`+
+            `<div class="menu_admin_button" onclick="zaprosPOST({'oper':'websocket'}, status_websocket); panel_admin()" style="background-image: url('config.png')"  title="Начальная настройка"></div>`+
+            ' </div></div>');
+        response.write('<div class="head_admin"><h1>Административная часть ФОТОПОЛКИ</h1><div id="info_vir_albom"></div></div>');
         response.write('<div class="admin_albom">');
         this.panel_show_almons(response);
         response.write('<br>');
@@ -364,6 +382,124 @@ class Admin {
 
     }
 
+    Websoket(WebSocket, server){
+        if (this.websokcet) {
+            const ws = new WebSocket({
+                httpServer: server,
+                autoAcceptConnections: false
+            });
+            ws.on('request', req => {
+                const connection = req.accept('', req.origin);
+                console.log('Connected:' + connection.remoteAddress);
+                connection.on('message', message => {
+                    const dataName = message.type + 'Data';
+                    const oper = message[dataName];
+                    console.dir(message);
+                    switch (oper) {
+                        case (oper.match(/Efi/) || {}).input:
+                            var files = new Array();
+                            files=this.sqlite.run('SELECT file.id AS id, file.name AS file_name, fould.name AS fould_p FROM file, fould WHERE file.id_fould=fould.id');
+                            connection.send(files.length);
+                            const sqlitet =this.sqlite;
+                            for (let file of files){
+                                new ExifImage({image:`${file.fould_p}${file.file_name}`},(error, exif)=>{
+                                        if(error) {
+                                            let objJson ={file:`${file.fould_p}${file.file_name}`, error:`${error.message}`,
+                                                date:'-' };
+                                            connection.send(JSON.stringify(objJson));
+                                        }
+                                        else {
+                                            let sd=exif.exif.DateTimeOriginal;
+                                            let data;
+                                            if(sd==undefined){
+                                                data=new Date(1977);
+                                            } else {
+                                                let m = sd.split(' ');
+                                                let da = m[0].split(':');
+                                                let ti = m[1].split(':');
+                                                data = new Date(da[0], Number(da[1]) - 1, da[2], ti[0], ti[1], ti[2]);
+
+//                                       sqlitet.run('UPDATE file SET time=? WHERE id=?',[data.getTime(), file.id]);
+                                            }
+                                            let objJson ={
+                                                file:`${file.fould_p}${file.file_name}`,
+                                                error:``,
+                                                date:`${data.toDateString()}`
+                                            }
+                                            connection.send(JSON.stringify(objJson));
+                                        }
+                                    }
+                                );
+                            }
+                            break;
+                        case (oper.match(/scan/) || {}).input:
+                            console.log('scan');
+                            let arr= Array();
+                            arr=this.getFiles('foto');
+                            connection.send(arr.length);
+                            var ds = new Array();
+                            var fould=" ";
+                            var countFoto=0;
+                            var countFould=1;
+                            var arrayFoto = new Array();
+                            var arrayFould = new Array();
+                            for(let i in arr){
+                                ds=arr[i].split('/');
+                                for (let j in ds){
+                                    var de=arr[i].lastIndexOf('/')+1;
+                                    var d=arr[i].substring(de, arr[i].len-de);
+                                    if (d==fould){ }
+                                    else {
+                                        if (countFoto>0){
+                                            console.log(`${fould} \tКоль-во фото ${countFoto}\n`);
+                                            var gf =
+                                                {id: countFould,
+                                                    name: fould,
+                                                    count: countFoto,
+                                                    id_tag: 1
+                                                }
+                                            arrayFould.push(gf);
+                                            connection.send(JSON.stringify(gf));
+                                        }
+                                        fould=d;
+                                        countFould=countFould+1;
+
+                                        countFoto=0;
+                                    }
+                                    if (this.file_check(ds[j])) {
+                                        countFoto=countFoto+1;
+                                        arrayFoto.push({':name': ds[j],':id_fould': countFould});
+                                    }
+                                }
+                            }
+                            connection.send('Запись в базу');
+                            for(let i in arrayFould){
+                        //        this.sqlite.run('INSERT INTO fould (id, name, count, id_tag) VALUES(:id, :name, :count, :id_tag)', arrayFould[i]);
+                            }
+
+                            //запись фотографий
+                            for(let i in arrayFoto){
+                                //this.sqlite.run('INSERT INTO file (name, id_fould) VALUES(:name, :id_fould)', arrayFoto[i]);
+
+                            }
+                            connection.send('Звершена, запись в базу!')
+
+
+                    break;
+                    }
+                    console.log('exit');
+                    connection.send('exit_');
+           //         ws.close;
+                });
+                connection.on('close', (reasonCode, description) => {
+                    console.log('Disconnected' + connection.remoteAddress);
+                    console.dir({reasonCode, description});
+                });
+            })
+        }
+        this.websokcet=false;
+        return JSON.stringify({info:'ok'});
+    }
 
     /**
      * Стоит обрабытывать файл или нет

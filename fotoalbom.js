@@ -173,6 +173,15 @@ class Fotoalmom {
         };
         return JSON.stringify(albom_vir);
     }
+    RenameVirtualAlbom(id_vir_albom, name){
+    console.log(`name=${name} \t id=${id_vir_albom}`);
+        this.sqlite.run(`UPDATE vir_fould SET name=? WHERE id=?`, [name, id_vir_albom]);
+        var albom_vir={
+            'name':name,
+            'id':id_vir_albom
+        };
+        return JSON.stringify(albom_vir);
+    }
     DeleteVirtualAlbom(id_vir_albom){
         let sql = `DELETE FROM vir_file WHERE (id_vir_fould=?)`;
         this.sqlite.run(sql, [id_vir_albom]);

@@ -1,4 +1,7 @@
-
+:root{
+  --icon_size: 48px;
+  --icon_size_hover: 47px;
+}
 #date{
   background-image: url('menu.jpg');
   padding: .5em;
@@ -56,7 +59,6 @@ body{
   align-items: center;
   justify-content: center;
   color: white;
-  width: 100vw;
 }
 button{
   cursor: pointer;
@@ -112,14 +114,46 @@ button:hover{
   border-radius: 1.5rem 1.5rem .1rem .1rem ;
   padding-right: 6px;
 }
+.menu_admin_button{
+  width: var(--icon_size);
+  height: var(--icon_size);
+  background-size: contain;
+}
+
+.menu_admin_button:hover{
+  cursor: pointer;
+  width: var(--icon_size_hover);
+  height: var(--icon_size_hover);
+  border: white 1px solid;
+}
+
+#info_vir_albom{
+  background-color: antiquewhite;
+  border: solid 0.125rem;
+  border-radius: 0.2rem;
+  border-color: chocolate;
+  padding: .5rem;
+}
+
+.menu_admin_osn{
+  background-color: #0000FF;
+  border: solid 0.125rem;
+  border-radius: 0.2rem;
+  border-color: chocolate;
+  color: yellow;
+  font-weight: bold;
+  display: flex;
+  flex-flow: row wrap;
+  font-size: 1.5rem;
+}
 .pilot{
   background-color: white;
   flex: 1 .5rem 3rem;
   opacity: 25%;
 }
+
 .pilot:hover{
   cursor: pointer;
-
   background-color: white;
   flex: 1 .5rem 3rem;
   opacity: 75%;
@@ -196,10 +230,16 @@ button:hover{
   border: black 2px solid;
   text-align: center;
 }
+.head_admin{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
 .admin_albom{
-  height: 65vh;
+  height: 75vh;
   overflow: auto;
+  box-shadow: 0.3125rem 0.3125rem 1.325rem #0F5F73;
 }
 .polka {
   background-image: url("page.jpg");

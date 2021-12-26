@@ -1,55 +1,11 @@
-
-
-
 /**
  * Удаление фона классу CCS polka
  */
 function clearbackgroudpolka(){
     var polka=document.getElementsByClassName('polka');for (p of polka){p.style.background='none'} ;
 }
-var xmlHttp;
-//Функция создания объекта XMLHttpRequest
-/*function createXmlHttpRequestObject() {
-    var xmlHttp;
-    try {
-        xmlHttp=new XMLHttpRequest();
-    } catch (e) {
-        // Internet Exploer
-        try {
-         xmlHttp=new ActiveXObject("Msxml2.XMLHTTP");   
-        } catch (e) {
-           try {
-             xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");   
-           } catch (e) {
-                alert("Технология AJAX не поддерживается!");
-                return false;
-           }
-        }
-    }
-    return xmlHttp;
-}
-*///Отправка асинхронного НТТР-запроса
-/*function http_zapros(id_fould, foto) {
-    
- xmlHttp = createXmlHttpRequestObject();
-
-    if (xmlHttp){
-        try {
-          // запрос файла с сервера
-          var fil=`&floud=${id_fould}&foto=${foto}&ajax=1`;
-    
-          xmlHttp.responseText='json';
-          xmlHttp.open("GET", fil, true);
-          xmlHttp.onreadystatechange=obrabotka;
-          xmlHttp.send(null);
-        } catch (e) {
-            alert("Не удалось соединиться с сервером!"); 
-        }
-    }       
-}
-*/
 function admin_panel_for_new_name_vir_fould(){
-    var response=document.getElementById('info_vir_albom');
+    var response=document.getElementById('dialog');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Имя нового виртуального альбома</div>`+
         `<input id="new_name_vir_fould_name" placeholder="Введити имя альбома">`+
@@ -61,7 +17,7 @@ function admin_panel_for_new_name_vir_fould(){
 
 }
 function admin_panel_for_delete_vir_fould(){
-    var response=document.getElementById('info_vir_albom');
+    var response=document.getElementById('dialog');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Удалить виртуальный альбом?</div>`+
         `<img src="vopros.png">`+
@@ -72,7 +28,32 @@ function admin_panel_for_delete_vir_fould(){
         `</div></div>`;
 
 }
+function admin_panel_for_rename_vir_fould(){
+    var response=document.getElementById('dialog');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Переименовать виртуальный альбом?</div>`+
+        `<label>Введите имя:<input type="text" maxlength="256" id="new_name"></label>`+
+        `<button id="new_name_button"  onclick="let id=document.getElementById('info_vir_albom').dataset.tag;console.log(id);  let caption=document.getElementById('new_name').value;`+
+        `zaprosPOST({'id_vir_albom': id, 'oper': 'vir_albom_rename', 'name': caption}, rename_vir_albom);`+
+        `document.getElementById('new_name_vir_fould').style.display='none'">Переименовать</button>`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Отмена</button>`+
+        `</div></div>`;
 
+}
+function rename_vir_albom(objJSON) {
+    console.dir(objJSON);
+    var response=document.getElementById('dialog');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Виртуальный альбом переименован!</div>`+
+        `<img src="znak_ok.png" width="256">`+
+        `Виртуальный альбом "${objJSON.name}"!`+
+        `<button id="new_name_button"  onclick="zaprosPOST({'fould': ${objJSON.id}, 'oper': 'vir_f'}, alboms_vir_print_admin);document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
+        `</div></div>`;
+    var albom=document.getElementById('albom_admin');
+    albom.innerHTML="";
+
+
+}
 /**
  * Вывод фотольбома а админке JSON
  * @param id_fould
@@ -85,17 +66,14 @@ function zapros_admin_fotoalbom(id_fould, id_vir_albom) {
  * @param id_fould
  */
 function zapros_admin_vir_fotoalbom(id_fould) {
-    zaprosPOST({"fould": id_fould, "oper": "vir_f"}, alboms_vir_print_admin)
+    zaprosPOST({"fould": id_fould, "oper": "vir_f"}, alboms_vir_print_admin);
 }
-
 function zapros_vir_fotoalbom(id_fould) {
     zaprosPOST({"fould": id_fould, "oper": "vir_albom"}, albom_vir_print)
 }
-
 function zapros_fotoalbom(id_fould) {
     zaprosPOST({"fould": id_fould, "oper": "albom"}, albom_vir_print)
 }
-
 function albom_vir_print(objJSON){
     if (objJSON.length==0) return;
     var text="";
@@ -133,7 +111,6 @@ function open_foto(dataset){
     document.getElementById('alboms-polka').innerHTML=text;
     document.getElementById('alboms-polka').style.display="block";
 }
-
 function open_foto_next(objJSON){
     document.getElementById('foto').style.backgroundImage=`url("${objJSON.fould+objJSON.name}")`;
     document.getElementById('fotoend').dataset.id_foto=objJSON.id;
@@ -144,9 +121,8 @@ function open_foto_next(objJSON){
     document.getElementById('fotonext').dataset.fould=objJSON.fould;
     document.getElementById('date').innerHTML=`"${objJSON.caption}" ${objJSON.data}`;
 }
-
 function delete_vir_albom(objJSON){
-    var response=document.getElementById('info_vir_albom');
+    var response=document.getElementById('dialog');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Виртуальный альбом удалён!</div>`+
         `<img src="znak_ok.png" width="256">`+
@@ -161,7 +137,6 @@ function delete_vir_albom(objJSON){
 
 
 }
-
 function pplus(albom=document.getElementById('albom_admin').getElementsByClassName('albom')){
     clearbackgroudpolka();
     for (al of albom) {
@@ -172,7 +147,6 @@ function pplus(albom=document.getElementById('albom_admin').getElementsByClassNa
         var ww=w*2;al.style.width=ww+'px';
     }
 }
-
 function mminus(albom=document.getElementById('albom_admin').getElementsByClassName('albom')){
     clearbackgroudpolka();
     for (al of albom) {
@@ -183,10 +157,6 @@ function mminus(albom=document.getElementById('albom_admin').getElementsByClassN
         var ww=w/2;al.style.width=ww+'px';
     }
 }
-
-
-
-
 function zaprosPOST(params, readyfun){
     var xmlHttp;
     try {
@@ -226,7 +196,6 @@ function zaprosPOST(params, readyfun){
         }
     }
 }
-
 function panelfind(panel) {
     var panel1=document.getElementById('menufind1');
     if (panel.style.visibility=="hidden"){
@@ -234,6 +203,8 @@ function panelfind(panel) {
         panel1.style.display="inline-flex";
         panel.style.visibility="visible";
         panel1.style.visibility="visible";
+        console.log('zapros time');
+        zaprosPOST({'oper':'date_min_max'}, finddate_max_min);
     }else {
         if(document.getElementById('caps_h1').style.display=="none") {
             panel.style.display = "none";
@@ -244,7 +215,15 @@ function panelfind(panel) {
     }
 
 }
+function finddate_max_min(objJSON) {
+    const max=new Date(parseInt(objJSON.max,10));
+    const min=new Date(parseInt(objJSON.min,10));
+    max.setMilliseconds(4 * 60 * 60 * 1000);  // +4 часа
+    min.setMilliseconds(4 * 60 * 60 * 1000);  // +4 часа
+    document.getElementById('date_ot').value=min.toISOString().substring(0, 16);
+    document.getElementById('date_do').value=max.toISOString().substring(0, 16);
 
+}
 function check() {
     var id_vir_albom=this.dataset.id_vir_albom;
     if(id_vir_albom=="undefined") return;
@@ -257,7 +236,6 @@ function check() {
         zaprosPOST({"oper":"insert","id_vir_fould": id_vir_albom, "id_foto": id_foto}, delete_insert_foto_vir_albom);
     }
 }
-
 function finddata(findinfoto) {
     var date_ot=new  Date(document.getElementById('date_ot').value);
     var date_do=new  Date(document.getElementById('date_do').value);
@@ -277,7 +255,6 @@ function finddata(findinfoto) {
         }, alboms_print);
     }
 }
-
 function  alboms_vit_print(objJSON){
     var  text="";
     for(let fould of objJSON){
@@ -303,11 +280,10 @@ function  alboms_print(objJSON){
     document.getElementById('menufind').style.display="inline-flex";
 }
 function delete_insert_foto_vir_albom(objJSON){
-    var info= document.getElementById('info_vir_albom');
+    var info= document.getElementById('dialog');
     info.dataset.tag=objJSON.id;
     info.innerHTML=`Имя текущего вирт альбома ${objJSON.name}<br>Общие количество фотографий в альбоме ${objJSON.count}`;
 }
-
 function alboms_print_admin(objJSON){
     var text=`<div class="ziro"><button onclick="pplus()">+</button>`+
         `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br></div>` +
@@ -323,15 +299,14 @@ function alboms_print_admin(objJSON){
     var albom=document.getElementById('albom_admin');
     albom.innerHTML=text;
 }
-
 function alboms_vir_print_admin(objJSON){
     var text="";
     if (objJSON[0].id==="-1"){
-         text=`<div id="albom_admin_foto"> В альбоме <b>${objJSON[0].name}</b> нет фотографий!<br><div><button onclick="">Переименовать</button><button onclick="admin_panel_for_delete_vir_fould()">Удалить</button></div></div>`;
+         text=`<div id="albom_admin_foto"> В альбоме <b>${objJSON[0].name}</b> нет фотографий!<br><div><button onclick="admin_panel_for_rename_vir_fould()">Переименовать</button><button onclick="admin_panel_for_delete_vir_fould()">Удалить</button></div></div>`;
     }
     else{
         text=`<div class="ziro"><button onclick="pplus()">+</button>`+
-            `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br><div><button onclick="">Переименовать</button><button onclick="admin_panel_for_delete_vir_fould()">Удалить</button></div></div>` +
+            `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br><div><button onclick="admin_panel_for_rename_vir_fould()">Переименовать</button><button onclick="admin_panel_for_delete_vir_fould()">Удалить</button></div></div>` +
             '<div id="albom_admin_foto">';
         var info= document.getElementById('info_vir_albom');
         for( let foto of objJSON){
@@ -345,37 +320,112 @@ function alboms_vir_print_admin(objJSON){
     var albom=document.getElementById('albom_admin');
     albom.innerHTML=text;
 }
-//Функция обработки ответа сервера
-/*
-function obrabotka() {
-    if (xmlHttp.readyState===4) {
-        if (xmlHttp.status===200) {
-            try { load(JSON.parse(xmlHttp.response));
-            } catch (e) {alert("Ошибка чтения ответа!"+e);}
-        }
-        else {     alert("Возникла проблема при получении данных с сервера:/n"+xmlHttp.statusText);     }
-    }
-}
-
-
-function load(objJSON){
-    var foto=document.getElementById('foto');
-    var fotoend=document.getElementById('fotoend');
-    var fotonext=document.getElementById('fotonext');
-    var f=objJSON['fould']+objJSON['foto'];
-    foto.style.backgroundImage = `url("${f}")`;
-    fotonext.dataset.tag=objJSON['next'];
-    fotoend.dataset.tag=objJSON['end'];   
-}
-*/
-
 /**
  * Получено информация о новом фотоальбоме
  * @param objJSON
  */
 function new_vir_fotoalbom(objJSON) {
-    var info= document.getElementById('info_vir_albom');
+    var info= document.getElementById('dialog');
     info.dataset.tag=objJSON.id;
     info.innerHTML=`Имя текущего вирт альбома ${objJSON.name}`;
 
 }
+//WebSocket для админки
+function admin_websocket_client() {
+    const webSocket = new WebSocket('ws://localhost:3001');
+    let log_error = document.getElementById('log_error');
+    let logg=document.getElementById('log');
+    webSocket.onopen = event => {
+        logg.innerText='';
+        log_error.innerText='';
+        webSocket.send("Efi");
+    };
+    let nober=0;
+    let max_nober=0;
+    let count_error=0;
+    webSocket.onmessage = event => {
+        if(max_nober==0){
+            max_nober=event.data;
+        } else {
+            if (event.data.indexOf(':') > -1) {
+                let objJSON = JSON.parse(event.data);
+                if (objJSON.date == '-') {
+                    log_error.innerText = `Файл ${objJSON.file} с ошибкой ${objJSON.error}! \x0a` + log_error.outerText;
+                    count_error = count_error + 1;
+                }
+            }
+        }
+        if (count_error)
+            logg.innerText=`Из ${max_nober} обработано ${nober}! С ошибкой ${count_error}.`;
+        else
+            logg.innerText=`Из ${max_nober} обработано ${nober}!`;
+        if(max_nober==nober) {
+            webSocket.close(1000);
+        }
+        nober=nober+1;
+    };
+
+    webSocket.onclose = event => {
+        log_error.innerText = logg.outerText+'\x0a'+ log_error.outerText;
+        logg.innerText='Спасибо, первоначальная настройка завершина!';
+        document.getElementById('button_step_2').style.display='none';
+        document.getElementById('close').style.display='block';
+    };
+}
+
+function admin_websocket_client_scan() {
+    const webSocket = new WebSocket('ws://localhost:3001');
+    let log_error = document.getElementById('log_error');
+    let logg=document.getElementById('log');
+    webSocket.onopen = event => {
+        logg.innerText='';
+        log_error.innerText='';
+        webSocket.send("scan");
+    };
+    webSocket.onmessage = event => {
+        if (event.data.indexOf(':') > -1) {
+            let objJSON = JSON.parse(event.data);
+            log_error.innerText = `Папка ${objJSON.name} и ${objJSON.count} фотографий \x0a` + log_error.outerText;
+            console.log(objJSON.date);
+        } else{
+            switch (event.data) {
+                case (event.data.match(/exit_/) || {}).input:
+                    webSocket.close(1000);
+                    break;
+                default:
+                    logg.innerText = event.data;
+            }
+        }
+    };
+    webSocket.onclose = event => {
+        logg.innerText=logg.innerText+'Перейдите ко второму шагу!';
+        document.getElementById('button_step_2').style.display='block';
+        document.getElementById('button_step_1').style.display='none';
+    };
+}
+
+function status_websocket(objJSON) {
+    console.dir(objJSON);
+}
+function panel_admin() {
+    var info=document.getElementById('dialog');
+    info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Первоначальная настройка</div>`+
+        `<button id="button_step_1"  onclick="admin_websocket_client_scan();">Сканирование папки "foto"... (шаг 1)</button>`+
+        `<button id="button_step_2" style="display: none"  onclick="admin_websocket_client();">Создать временные метки...(шаг 2)</button>`+
+        `<button id="close" style="display: none" onclick="document.getElementById('new_name_vir_fould').style.display='none'">Готово</button> `+
+        `<div style="text-shadow: none; background-color: aliceblue;" id="log" ></div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 10vh; overflow: auto;" id="log_error" ></div>`+
+        `</div></div>`;
+
+}
+
+function select_found(event) {
+    let files = event.target.files;
+
+    for (let i=0; i<files.length; i++)
+        console.log(files[i].webkitRelativePath);
+
+}
+
+

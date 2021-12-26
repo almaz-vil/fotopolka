@@ -1,9 +1,10 @@
 const http = require("http");
+const WebSocket = require("websocket").server;
 let satic = require('node-static');
 const HeadlerParam = require('./urlparam');
 const Foto = require('./fotoalbom');
 const Admin = require('./admin');
-const sqlite =require('sqlite-sync');// require("sqlite3");
+const sqlite =require('sqlite-sync');
 sqlite.connect('foalbom');
 let admin = new Admin(sqlite);
 let fotoalbom =  new Foto(sqlite);
@@ -44,6 +45,9 @@ http.createServer(
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, admin.FindDateAlbomJSON(js.date_ot, js.date_do, js.findinfoto));
                             break;
+                        case (oper.match(/date_min_max/) || {}).input:
+                            admin.ResponeJSON(response, admin.FindDateMinMaxJSON());
+                            break;
                         case (oper.match(/showfoto/) || {}).input:
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, fotoalbom.ShowFoto(js.id_foto, js.foto, js.fould, js.id_fould, js.id_vir_fould, js.naprav ));
@@ -77,7 +81,7 @@ http.createServer(
 
 
 
-http.createServer(
+const serverAdmin=http.createServer(
     function(request,response){
         var param=request.url;
         if(admin.file_check(param)){  request.addListener('end', function(){ serverf.serve(request,response); }).resume();}
@@ -98,6 +102,9 @@ http.createServer(
                         case (oper.match(/delete_/) || {}).input:
                             admin.ResponeJSON(response, fotoalbom.DeleteIzVirtualAlbom(JSON.parse(body)["id_vir_fould"],JSON.parse(body)["id_foto"]));
                             break;
+                        case (oper.match(/vir_albom_rename/) || {}).input:
+                            admin.ResponeJSON(response, fotoalbom.RenameVirtualAlbom(JSON.parse(body)["id_vir_albom"],JSON.parse(body)["name"]));
+                            break;
                         case (oper.match(/fotoalbom/) || {}).input:
                             admin.ResponeJSON(response, admin.AlbomInJSON(JSON.parse(body)["fould"],JSON.parse(body)["vir_albom"]));
                             break;
@@ -106,6 +113,9 @@ http.createServer(
                             break;
                         case (oper.match(/new_vir_albom/) || {}).input:
                             admin.ResponeJSON(response, fotoalbom.NewVirtualAlbom(JSON.parse(body)["name"]));
+                            break;
+                        case (oper.match(/websocket/) || {}).input:
+                            admin.ResponeJSON(response, admin.Websoket(WebSocket, serverAdmin));
                             break;
                         case (oper.match(/vir_albom_delete/) || {}).input:
                             admin.ResponeJSON(response, fotoalbom.DeleteVirtualAlbom(JSON.parse(body)["id_vir_albom"]));
