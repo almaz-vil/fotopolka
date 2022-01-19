@@ -2,6 +2,16 @@
   --icon_size: 48px;
   --icon_size_hover: 47px;
 }
+
+#download{
+  width: var(--icon_size);
+  margin-right: var(--icon_size);
+}
+
+#download:hover{
+  width: var(--icon_size_hover);
+}
+
 #date{
   background-image: url('menu.jpg');
   padding: .5em;
@@ -9,12 +19,20 @@
   font-weight: 900;
   text-align: center;
 }
+.loading {
+  animation: 3s linear 0s normal none infinite running rotate-animation;
+  }
+
+@keyframes rotate-animation {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+  }
+
 @media (orientation: portrait){
   .image{
     display: flex;
     flex-flow: column nowrap;
    justify-content: space-between;
-   
   }
 .pilot{
 
@@ -79,7 +97,7 @@ button:hover{
 .menu input{
   margin-left: .5rem;
 }
-.menu div {
+.menu div, #download{
   cursor: pointer;
   padding: 2px;
   border: black 2px solid;
@@ -89,13 +107,33 @@ button:hover{
   color: yellow;
   text-shadow: -4px 4px 3px #999999, 1px -1px 2px #000;
 } 
- .menu div:hover{
+ .menu div:hover, #download:hover {
    box-shadow: 0.06rem 0.06rem 0.06rem #0F5F73;
    border: solid 0.125rem;
    border-radius: 0.5rem;
 
  }
 
+ #info_vir_albom_img {
+  width:10vw;
+  max-height: 16vh;
+}
+ .info_vir_albom_button{
+  border: black 2px solid;
+  box-shadow: 0.3125rem 0.3125rem 0.325rem #0F5F73;
+  width: 32px;
+  margin-right: 0.5rem;
+ }
+ .info_vir_albom_button:hover{
+  cursor: pointer;
+  box-shadow: 0.06rem 0.06rem 0.06rem #0F5F73;
+  border: solid 0.125rem;
+  width: 34px;  
+ }
+
+.div_form_fotos{
+  display: flex;
+}
 #menufind{
   display: inline-flex;
   padding-left: 10px;
@@ -200,6 +238,7 @@ button:hover{
   background-color: rgba(230,230,230,0.58);;
   align-items: center;
   justify-content: center;
+  z-index: 1;
 }
 
 .form{
@@ -208,7 +247,7 @@ button:hover{
   border: green 2px solid;
   text-shadow: -4px 4px 3px #999999, 1px -1px 2px #000;
   flex-direction: column;
-
+  align-items: center;
 }
 .form input{
   margin-left: 3em;
@@ -225,11 +264,49 @@ button:hover{
 .form_caption{
   background: blue;
   color: white;
-  padding: .6em;
   margin-bottom: 1em;
   border: black 2px solid;
   text-align: center;
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: self-end;
+  font-size: 1.2rem;
 }
+
+#grid_fotos_date{
+  display: grid;
+  grid-template-columns: 1fr 3fr 3fr;
+  grid-gap: 0.5em;
+  margin: .5em;
+}
+
+#grid_fotos_date > * {
+  background-color: indigo;
+    box-shadow: 0.3125rem 0.3125rem 0.325rem #0f5f73;
+    border: solid 0.125rem;
+    border-radius: 0.5rem;
+    border-color: chocolate;
+    color: yellow;
+    padding: 0.5em;
+    font-size: 1.2em;
+}
+
+.close{
+  border: black 2px solid;
+  padding: 0.4rem;
+  background-color: white;
+  text-shadow: none;
+  color: black;
+  width: 1rem;
+}
+
+.close:hover{
+  cursor: pointer;
+  background-color: black;
+  color: white;
+}
+
 .head_admin{
   display: flex;
   align-items: center;

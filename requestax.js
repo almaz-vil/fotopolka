@@ -4,6 +4,32 @@
 function clearbackgroudpolka(){
     var polka=document.getElementsByClassName('polka');for (p of polka){p.style.background='none'} ;
 }
+const TIME_FORMAT_MAS=[  
+    {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long',
+        timezone: 'UTC',
+        hour: 'numeric',
+        minute: 'numeric',
+    },{
+        year: 'numeric',
+    },{
+        year: 'numeric',
+        month: 'long',
+    },{
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    },{
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long',
+    }
+];
+
 function admin_panel_for_new_name_vir_fould(){
     var response=document.getElementById('dialog');
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
@@ -74,10 +100,16 @@ function zapros_vir_fotoalbom(id_fould) {
 function zapros_fotoalbom(id_fould) {
     zaprosPOST({"fould": id_fould, "oper": "albom"}, albom_vir_print)
 }
+function zapros_info_exif(id_file) {
+    zaprosPOST({"id_foto": id_file, "oper": "info_exif"}, info_exif);
+}
+
+
+
 function albom_vir_print(objJSON){
     if (objJSON.length==0) return;
     var text="";
-    text=`<div class="ziro"><button onclick="pplus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">+</button>`+
+    text=`<div class="ziro"><img id="download" title="Скачать все ${objJSON.length} фотографии!" src="download.png" onclick="download_all();" /><button onclick="pplus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">+</button>`+
         `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus(document.getElementById('albom_admin_foto').getElementsByClassName('albom'))">-</button></div>` +
         '<div id="albom_admin_foto">';
     for( let foto of objJSON){
@@ -93,6 +125,29 @@ function albom_vir_print(objJSON){
     if (menufind.style.visibility=="hidden"){
         menufind.style.display="none";
     }
+}
+
+function download_all(){    
+    let albom=document.getElementById('albom_admin_foto');
+    let polkas=albom.querySelectorAll('div.polka');
+    let urls= new Array();
+    polkas.forEach(element => {
+        let alb=element.querySelector('div.albom');
+        let img= alb.querySelector('img');
+        urls.push(img.dataset.fould+img.dataset.foto);
+    });
+    const delay = () => new Promise(resolve => setTimeout(resolve, 1000));
+    const downloadWithRequest = async () => {
+      for await (const [index, url] of urls.entries()) {
+        await delay();
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = url;
+        link.click();
+      }
+    };
+    downloadWithRequest();
+    
 }
 function open_foto(dataset){
     var caption=document.getElementsByClassName('caption')[0].innerHTML;
@@ -130,7 +185,9 @@ function delete_vir_albom(objJSON){
         `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
         `</div></div>`;
     var info= document.getElementById('info_vir_albom');
-    info.dataset.id_vir_albom="undefined";
+    info.dataset.id_vir_albom="-1";
+    info.dataset.tag="-1";
+    info.innerHTML="";
     document.getElementById(`vir_albom_${objJSON.id}`).style.display="none";
     var albom=document.getElementById('albom_admin');
     albom.innerHTML="";
@@ -226,8 +283,11 @@ function finddate_max_min(objJSON) {
 }
 function check() {
     var id_vir_albom=this.dataset.id_vir_albom;
-    if(id_vir_albom=="undefined") return;
     var id_foto=this.dataset.id_foto;
+    if(id_vir_albom=="-1") {
+        zaprosPOST({"oper":"info_admin_foto", "id_foto": id_foto}, info_admin_foto);
+        return;
+    }
     if (this.style.opacity=="0.75"){
         this.style.opacity="0";
         zaprosPOST({"oper":"delete_","id_vir_fould": id_vir_albom, "id_foto": id_foto}, delete_insert_foto_vir_albom);
@@ -255,6 +315,52 @@ function finddata(findinfoto) {
         }, alboms_print);
     }
 }
+
+function info_exif(objJSON){
+    let info=document.getElementById('dialog');
+    info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">EXIF информация`+
+        `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 80vh; overflow:auto;" id="log_error" ><pre>${objJSON.exif}</pre></div>`+
+        `</div></div>`;
+}
+
+function zapros_admin_add_date_for_foto(id_file, date) {
+    zaprosPOST({"id_foto": id_file, "date":date, "oper": "add_date_for_foto"}, add_date_for_foto_otvet);
+}
+
+function add_date_for_foto_otvet(objJSON) {
+    var response=document.getElementById('dialog');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Дата фотографии успешна изменена!</div>`+
+        `<img src="znak_ok.png" width="256">`+
+        `На "${objJSON.date}"!`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
+        `</div></div>`;
+    
+}
+
+function add_date_for_foto(foto_id) {    
+    var info=document.getElementById('dialog');
+    info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Изменение даты `+
+        `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
+        `<input type="datetime-local" id="date_new"></input>`+
+        `<button  onclick="zapros_admin_add_date_for_foto(${foto_id}, document.getElementById('date_new').value)">Изменить</button>`+        
+        `</div></div>`;
+}
+
+function info_admin_foto(objJSON){
+    console.dir(objJSON);
+    if(objJSON.time==="null"){
+        objJSON.date=`<img src="add_time.png" class="info_vir_albom_button" onclick="add_date_for_foto(${objJSON.id})"/><br>${objJSON.file}`;
+    }
+    let info=document.getElementById('info_vir_albom');
+    info.innerHTML=`<img src="${objJSON.fould}${objJSON.file}" id="info_vir_albom_img"/>`+
+                    `<img src="info_exif.png" class="info_vir_albom_button" onclick="zapros_info_exif(${objJSON.id})"/>`+
+                    `${objJSON.date}`;
+    
+}
 function  alboms_vit_print(objJSON){
     var  text="";
     for(let fould of objJSON){
@@ -280,16 +386,60 @@ function  alboms_print(objJSON){
     document.getElementById('menufind').style.display="inline-flex";
 }
 function delete_insert_foto_vir_albom(objJSON){
-    var info= document.getElementById('dialog');
+    var info= document.getElementById('info_vir_albom');
     info.dataset.tag=objJSON.id;
-    info.innerHTML=`Имя текущего вирт альбома ${objJSON.name}<br>Общие количество фотографий в альбоме ${objJSON.count}`;
+    info.innerHTML=`<div class="close" id="button_close" onclick="close_vir_albom()">X</div><br>Имя текущего вирт альбома <b>${objJSON.name}<b/><br>Общие количество фотографий в альбоме <b>${objJSON.count}</b>`;
 }
+
+function add_button_for_add_date_fotos(fould_id) {
+    let info=document.getElementById('info_vir_albom');
+        info.innerHTML=`<img src="add_time.png" class="info_vir_albom_button" onclick="zaprosPOST({'fould': ${fould_id}, 'oper': 'fotoalbom'}, add_date_fotos_form)"/>`;
+                 
+}
+
+function  add_date_fotos_form(objJSON) {
+    console.dir(objJSON);
+    let grid_data='<div>Фото</div><div>Дата</div><div>Вывод даты по шаблону</div>\n';
+    objJSON.forEach(foto => {
+        let list='<select size="1">';
+        for(format of TIME_FORMAT_MAS){
+           list=list+`<option>${DateInStrFormat(foto.time,format)}</option>`;
+        }
+        list=list+'</select>';
+        grid_data=grid_data+`<div><img src="${foto.fould}${foto.foto}" style="max-height: 4vh; " /></div><div>${foto.date}</div><div>${list}</div>\n`;
+    });
+    let mas_chas= Array('-12','-11','-10','-9','-8','-7','-6','-5','-4','-3','-2','-1','0'
+                                ,'+1','+2','+3','+4','+5','+6','+7','+8','+9','+10','+11','+1');
+    let chas_list='<select>';
+    mas_chas.forEach((element, index)=>{
+        if(index==12)
+          chas_list=chas_list+`<option selected >${element}</option>`; 
+        else
+          chas_list=chas_list+`<option>${element}</option>`;
+    });
+    chas_list=chas_list+'</select>';
+    var info=document.getElementById('dialog');
+    info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Изменение даты `+
+        `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
+        `<div class="div_form_fotos"><input type="datetime-local" id="date_new"></input>Корректировка часового пояса ${chas_list}</div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 30vh; overflow: auto;"><div id="grid_fotos_date" >${grid_data}</div></div>`+
+       
+        `<button  onclick="zapros_admin_add_date_for_foto(${objJSON[0].fould_id}, document.getElementById('date_new').value)">Изменить</button>`+        
+        `</div></div>`;
+}
+
 function alboms_print_admin(objJSON){
+
     var text=`<div class="ziro"><button onclick="pplus()">+</button>`+
         `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br></div>` +
         //`<div class="ziro"> </div> `+
         '<div id="albom_admin_foto">';
-    var info= document.getElementById('info_vir_albom');
+    let info= document.getElementById('info_vir_albom');
+    let id_vir_albom=info.dataset.tag;
+    if(id_vir_albom=="-1") {
+        add_button_for_add_date_fotos(objJSON[0].fould_id);   
+    }
     for( let foto of objJSON){
         var op="0";
         if(foto.chesk){op="0.75";}
@@ -316,28 +466,55 @@ function alboms_vir_print_admin(objJSON){
     }
     var info= document.getElementById('info_vir_albom');
     info.dataset.tag=objJSON[0].id_vir_fould;
-    info.innerHTML=`Имя текущего вирт альбома <b>${objJSON[0].name}</b>`;
+    info.innerHTML=`<div class="close" id="button_close" onclick="close_vir_albom()">X</div><br>Имя текущего вирт альбома <b>${objJSON[0].name}</b>`;
     var albom=document.getElementById('albom_admin');
     albom.innerHTML=text;
 }
+
+function close_vir_albom() {
+    let info= document.getElementById('info_vir_albom');
+    info.dataset.tag=-1;
+    info.innerHTML=``;
+    let fotos= new Array();
+    fotos=document.getElementById('albom_admin_foto').getElementsByClassName('polka');
+    for(element of fotos) {
+       let img=element.querySelector('img');
+       img.style.opacity='0';
+       img.dataset.id_vir_albom='-1';
+    };    
+}
+
+
 /**
  * Получено информация о новом фотоальбоме
  * @param objJSON
  */
 function new_vir_fotoalbom(objJSON) {
-    var info= document.getElementById('dialog');
+    var info= document.getElementById('info_vir_albom');
     info.dataset.tag=objJSON.id;
-    info.innerHTML=`Имя текущего вирт альбома ${objJSON.name}`;
-
+    info.innerHTML=`<div class="close" id="button_close" onclick="close_vir_albom()">X</div>Имя текущего вирт альбома <b>${objJSON.name}</b>`;
+    const ams=document.getElementById('admin_vid_vir_alboms');
+    ams.innerHTML=ams.outerHTML+
+    `<div  class="polka" id="vir_albom_${objJSON.id}" onclick="zapros_admin_vir_fotoalbom(${objJSON.id})"><div class="albom">`+
+    `${objJSON.name}<br><b>{0}</b></div></div>`;
+}
+var rounded = function(number){
+    return +number.toFixed(2);
 }
 //WebSocket для админки
 function admin_websocket_client() {
     const webSocket = new WebSocket('ws://localhost:3001');
     let log_error = document.getElementById('log_error');
     let logg=document.getElementById('log');
+    let img_reload=document.getElementById('imag_reload');
     webSocket.onopen = event => {
         logg.innerText='';
         log_error.innerText='';
+        img_reload.style.display='block';
+        document.getElementById('button_step_1').style.display='none';
+        document.getElementById('button_step_2').style.display='none';
+        document.getElementById('button_close').style.display='none';
+        timer_init();
         webSocket.send("Efi");
     };
     let nober=0;
@@ -356,19 +533,20 @@ function admin_websocket_client() {
             }
         }
         if (count_error)
-            logg.innerText=`Из ${max_nober} обработано ${nober}! С ошибкой ${count_error}.`;
+            logg.innerHTML=`Из ${max_nober} обработано <b>${rounded((nober*100)/max_nober)}%</b>(${nober})! С ошибкой ${count_error}.`;
         else
-            logg.innerText=`Из ${max_nober} обработано ${nober}!`;
+            logg.innerHTML=`Из ${max_nober} обработано <b>${rounded((nober*100)/max_nober)}%</b>(${nober})! `;
         if(max_nober==nober) {
+            timer_stop();
             webSocket.close(1000);
         }
         nober=nober+1;
     };
 
     webSocket.onclose = event => {
+        img_reload.style.display='none';
         log_error.innerText = logg.outerText+'\x0a'+ log_error.outerText;
         logg.innerText='Спасибо, первоначальная настройка завершина!';
-        document.getElementById('button_step_2').style.display='none';
         document.getElementById('close').style.display='block';
     };
 }
@@ -377,9 +555,15 @@ function admin_websocket_client_scan() {
     const webSocket = new WebSocket('ws://localhost:3001');
     let log_error = document.getElementById('log_error');
     let logg=document.getElementById('log');
+    let img_reload=document.getElementById('imag_reload');
     webSocket.onopen = event => {
         logg.innerText='';
         log_error.innerText='';
+        document.getElementById('button_step_1').style.display='none';
+        document.getElementById('button_step_2').style.display='none';
+        document.getElementById('button_close').style.display='none';
+        img_reload.style.display='block';
+        timer_init();
         webSocket.send("scan");
     };
     webSocket.onmessage = event => {
@@ -398,9 +582,12 @@ function admin_websocket_client_scan() {
         }
     };
     webSocket.onclose = event => {
+        timer_stop();
+        img_reload.style.display='none';
         logg.innerText=logg.innerText+'Перейдите ко второму шагу!';
         document.getElementById('button_step_2').style.display='block';
-        document.getElementById('button_step_1').style.display='none';
+        document.getElementById('button_close').style.display='block';
+       
     };
 }
 
@@ -410,14 +597,22 @@ function status_websocket(objJSON) {
 function panel_admin() {
     var info=document.getElementById('dialog');
     info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
-        `<div class="form_caption">Первоначальная настройка</div>`+
+        `<div class="form_caption">Первоначальная настройка`+
+        `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
+        `<img style="display:none;" class="loading" width="64px" id="imag_reload" src="reload.png"/>`+
+        `<div id="timer">00:00</div>`+
         `<button id="button_step_1"  onclick="admin_websocket_client_scan();">Сканирование папки "foto"... (шаг 1)</button>`+
-        `<button id="button_step_2" style="display: none"  onclick="admin_websocket_client();">Создать временные метки...(шаг 2)</button>`+
+        `<button id="button_step_2"  onclick="admin_websocket_client();">Создать временные метки...(шаг 2)</button>`+
         `<button id="close" style="display: none" onclick="document.getElementById('new_name_vir_fould').style.display='none'">Готово</button> `+
         `<div style="text-shadow: none; background-color: aliceblue;" id="log" ></div>`+
         `<div style="text-shadow: none; background-color: aliceblue;  height: 10vh; overflow: auto;" id="log_error" ></div>`+
         `</div></div>`;
 
+}
+
+function DateInStrFormat(milsec, format) {
+var date = new Date(Number(milsec));
+return  date.toLocaleString("ru", format);
 }
 
 function select_found(event) {
@@ -426,6 +621,62 @@ function select_found(event) {
     for (let i=0; i<files.length; i++)
         console.log(files[i].webkitRelativePath);
 
+}
+
+//Секундомер
+//изначальные переменные
+min = 0;
+hour = 0;
+id_timer=0;
+//Оставляем вашу функцию
+function timer_init() {
+    sec = 0;
+    id_timer=setInterval(timer_tick, 1000);
+}
+function timer_stop() {
+    clearInterval(id_timer)
+}
+
+//Основная функция tick()
+function timer_tick() {
+    sec++;
+    if (sec >= 60) { //задаем числовые параметры, меняющиеся по ходу работы программы
+        min++;
+        sec = sec - 60;
+    }
+    if (min >= 60) {
+        hour++;
+        min = min - 60;
+    }
+    if (sec < 10) { //Визуальное оформление
+        if (min < 10) {
+            if (hour < 10) {
+                document.getElementById('timer').innerHTML ='0' + hour + ':0' + min + ':0' + sec;
+            } else {
+                document.getElementById('timer').innerHTML = hour + ':0' + min + ':0' + sec;
+            }
+        } else {
+            if (hour < 10) {
+                document.getElementById('timer').innerHTML = '0' + hour + ':' + min + ':0' + sec;
+            } else {
+                document.getElementById('timer').innerHTML = hour + ':' + min + ':0' + sec;
+            }
+        }
+    } else {
+        if (min < 10) {
+            if (hour < 10) {
+                document.getElementById('timer').innerHTML = '0' + hour + ':0' + min + ':' + sec;
+            } else {
+                document.getElementById('timer').innerHTML = hour + ':0' + min + ':' + sec;
+            }
+        } else {
+            if (hour < 10) {
+                document.getElementById('timer').innerHTML = '0' + hour + ':' + min + ':' + sec;
+            } else {
+                document.getElementById('timer').innerHTML = hour + ':' + min + ':' + sec;
+            }
+        }
+    }
 }
 
 

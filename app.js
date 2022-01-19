@@ -63,8 +63,8 @@ http.createServer(
                         `<div id="menufind1" style="visibility: visible"><label><input type="radio" name="find"  value="альбомах" id="find_in_albom">альбомах</label><label><input name="find" id="findinfoto" type="radio" checked="true" value="фотографиях" id="find_in_foto">фотографиях</label></div>`+
                         `<div id="menufind" style="visibility: hidden"><input type="datetime-local" id="date_ot" onchange="finddata(document.getElementById('findinfoto').checked)"><input type="datetime-local" value="${data.toISOString().substring(0, 16)}" id="date_do" onchange="finddata(document.getElementById('findinfoto').checked);"><input id="find"  name="find" placeholder="Для поиска начните ввод." data-flag_vir="false" onkeyup="var t=this.value; {zaprosPOST({'oper':'findAlboms', 'text':t, 'flag_vir':this.dataset.flag_vir}, alboms_print)}"></div>`+
                         `</div><div class="menu">`+
-                    `<div onclick="document.getElementById('find').dataset.flag_vir=true ;zaprosPOST({'oper':'vir_alboms'}, alboms_vit_print)">Виртуальные альбомы</div>`+
-                    `<div onclick="document.getElementById('find').dataset.flag_vir=false ;zaprosPOST({'oper':'alboms_'}, alboms_print)">Альбомы</div>`+
+                        `<div onclick="document.getElementById('find').dataset.flag_vir=true ;zaprosPOST({'oper':'vir_alboms'}, alboms_vit_print)">Виртуальные альбомы</div>`+
+                        `<div onclick="document.getElementById('find').dataset.flag_vir=false ;zaprosPOST({'oper':'alboms_'}, alboms_print)">Альбомы</div>`+
                         `<div onclick="panelfind(document.getElementById('menufind'))">поиск</div>`+
 
                     `</div>`);
@@ -119,6 +119,20 @@ const serverAdmin=http.createServer(
                             break;
                         case (oper.match(/vir_albom_delete/) || {}).input:
                             admin.ResponeJSON(response, fotoalbom.DeleteVirtualAlbom(JSON.parse(body)["id_vir_albom"]));
+                            break;
+                        case (oper.match(/info_admin_foto/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, fotoalbom.InfoAdminFoto(js.id_foto));
+                            break;
+                        case (oper.match(/info_exif/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, admin.InfoEXIF(js.id_foto));
+                            break;
+                        case (oper.match(/add_date_for_foto/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, fotoalbom.AddTimeForFoto(js.id_foto, js.date));
+                            break;
+                        
                     }
                 });
             }
