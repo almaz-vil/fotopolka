@@ -133,6 +133,7 @@ class Fotoalmom {
         return JSON.stringify(albom_vir);
     }
 
+
     DeleteIzVirtualAlbom(id_vir_albom, id_file){
         let sql = `DELETE FROM vir_file WHERE ((id_vir_fould=?) AND (id_file=?))`;
         this.sqlite.run(sql, [id_vir_albom,id_file]);
@@ -176,12 +177,24 @@ class Fotoalmom {
     }
     
     AddTimeForFoto(id_foto, date){
-        this.sqlite.run('UPDATE file SET time=? WHERE id=?', [date, id_foto]);
+        let dat = new Date(date);
+        this.sqlite.run('UPDATE file SET time=? WHERE id=?', [dat.getTime(), id_foto]);
         let foto={
-            'date':this.TimeToStr(date, 0),
+            'date':this.TimeToStr(date, 0)
         };
         return JSON.stringify(foto);
         
+    }
+
+    AddTimeForFotos(mas){
+        let mass= new Array()
+        mass=JSON.parse(mas);
+        mass.forEach((element)=>{
+            let time=Number(element.time);
+            let shablon=Number(element.shablon);
+            this.sqlite.run('UPDATE file SET time=?, time_shablon=? WHERE id=?', [time, shablon, element.id]);        
+        },this);
+        return JSON.stringify({'oper':'yes'});
     }
     
     /**

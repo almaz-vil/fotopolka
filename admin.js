@@ -88,6 +88,7 @@ class Admin {
                 id_vir_fould:`-1`,
                 date:this.TimeToStr(foto.time, foto.shablon),
                 time:`${foto.time}`,
+                time_shablon:`${foto.shablon}`,
                 chesk:false
             };
             var vir_file = new Array();
@@ -123,7 +124,8 @@ class Admin {
                 foto:`${foto.name}`,
                 name:`${fouldname}`,
                 id_vir_fould:`${id_vir_fould}`,
-                date: this.TimeToStr(foto.time, foto.time_shablon)
+                date: this.TimeToStr(foto.time, foto.time_shablon),
+                time_shablon:`${time_shablon}`
             };
             JSONMas.push(fotot);
         }
@@ -534,7 +536,26 @@ class Admin {
           return false;  
         }
     }
-     /**
+    
+    InfoTimeForFile(mas){
+        let objJSON = new Array();
+        let mass=JSON.parse(mas);
+        mass.forEach((item)=>{
+            let sql = `SELECT file.name AS name, file.id AS id, fould.name AS fould FROM file, fould WHERE ((file.id_fould=fould.id) AND (file.id=?))`;
+            let m = new Array();
+            m=this.sqlite.run(sql, [item.id]);
+            m.forEach(element => {
+                let path_file=pathModule.join(__dirname,`${element.fould}${element.name}`);
+                let info_file=fs.statSync(path_file);                 
+                objJSON.push({id:`${element.id}`, time:`${info_file.mtimeMs}` });
+            });
+           
+        });        
+        return JSON.stringify(objJSON);
+    }
+
+
+    /**
      * EXIF  для лога
      * @param {фото} id_file 
      * @returns 
@@ -547,10 +568,20 @@ class Admin {
         let fould = new Array();
         fould = this.sqlite.run('SELECT name FROM fould WHERE id=?', [id_fould]);
         let image;
+        let path_file=pathModule.join(__dirname,`${fould[0].name}${name}`);
+        let info_file=fs.statSync(path_file);
+        let info_json={
+            atime:`${info_file.atime}`,
+            mtime:`${info_file.mtime}`,
+            ctime:`${info_file.ctime}`,
+            
+        }
         try {
-            image= new ExifI({image: pathModule.join(__dirname,`${fould[0].name}${name}`)});
+
+            image= new ExifI({image: path_file});
             let objJSON={
-                exif:`${util.inspect(image, {showHidden: false, depth: null})}`
+                exif:`${util.inspect(image, {showHidden: false, depth: null})}`,
+                file:`${util.inspect(info_json, {showHidden: false, depth: null})}`
             }
             return JSON.stringify(objJSON);
         

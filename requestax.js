@@ -317,11 +317,12 @@ function finddata(findinfoto) {
 }
 
 function info_exif(objJSON){
+    console.dir(objJSON);
     let info=document.getElementById('dialog');
     info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">EXIF информация`+
         `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
-        `<div style="text-shadow: none; background-color: aliceblue;  height: 80vh; overflow:auto;" id="log_error" ><pre>${objJSON.exif}</pre></div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 80vh; overflow:auto;" id="log_error" ><pre>${objJSON.file}<br>${objJSON.exif}</pre></div>`+
         `</div></div>`;
 }
 
@@ -352,7 +353,8 @@ function add_date_for_foto(foto_id) {
 
 function info_admin_foto(objJSON){
     console.dir(objJSON);
-    if(objJSON.time==="null"){
+    let date_t=new Date(1977);
+    if(objJSON.time==date_t.getTime()){
         objJSON.date=`<img src="add_time.png" class="info_vir_albom_button" onclick="add_date_for_foto(${objJSON.id})"/><br>${objJSON.file}`;
     }
     let info=document.getElementById('info_vir_albom');
@@ -397,35 +399,203 @@ function add_button_for_add_date_fotos(fould_id) {
                  
 }
 
-function  add_date_fotos_form(objJSON) {
+function chas_kor_time_chesk() {
+    if (this.style.opacity=="0.75"){
+        this.style.opacity="0";        
+        this.dataset.flag="false";
+    }else {
+        this.style.opacity="0.75";
+        this.dataset.flag="true";
+    }
+
+}
+
+function chas_kor_time_chesk_all() {
+    if (this.style.opacity=="0.75"){
+        this.style.opacity="0";
+    }else {
+        this.style.opacity="0.75";
+    }
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_check');
+    mas_times.forEach((element)=>{
+        chas_kor_time_chesk.bind(element)();
+    });
+
+}
+
+function chas_kor_time(index) {
+    const houur=index-12;
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let check=document.getElementById(element.dataset.id_check).dataset.flag;
+        if(check==="true"){
+            let shablon=element.dataset.shablon;
+            let date= new Date(Number(element.dataset.time));
+            date.setHours(date.getHours()+houur);
+            let milsec=date.getTime();
+            element.dataset.time=milsec;
+            element.innerText=`${DateInStrFormat(milsec,TIME_FORMAT_MAS[Number(shablon)])}`;
+        }
+    });
+}
+
+function kor_date(date_s) {
+    let dat = new Date(date_s);
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let check=document.getElementById(element.dataset.id_check).dataset.flag;
+        if(check==="true"){            
+            let milsec=dat.getTime();
+            element.dataset.time=milsec;
+            element.innerText=`${DateInStrFormat(milsec,TIME_FORMAT_MAS[Number(element.dataset.shablon)])}`;
+        }
+    });
+}
+
+function kor_shablon(index) {
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let check=document.getElementById(element.dataset.id_check).dataset.flag;
+        if(check==="true"){
+            element.dataset.shablon=index;
+            let milsec=element.dataset.time;
+            element.innerText=`${DateInStrFormat(milsec,TIME_FORMAT_MAS[Number(index)])}`;
+        }
+    });
+}
+
+function chas_kor_shablon() {
+    const shablon=this.selectedIndex;
+    const id=this.id;
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let sha=element.dataset.id_shablon;
+        if(id===sha){
+            element.dataset.shablon=shablon;
+            element.innerText=`${DateInStrFormat(element.dataset.time,TIME_FORMAT_MAS[Number(shablon)])}`;
+            return;
+        }
+    });
+}
+
+
+function chas_kor_insert() {
+    let mas = new Array();
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+
+        mas.push({id:element.dataset.id,time:element.dataset.time, shablon:element.dataset.shablon});
+        });
+    console.dir(mas);
+    zaprosPOST({'oper': 'ad_date_for_fotos', 'mas':`${JSON.stringify(mas)}`}, chas_kor_insert_otvet);
+}
+
+function chas_kor_insert_otvet(objJSON) {
+    document.getElementById('new_name_vir_fould').style.display='none';
+    let response=document.getElementById('dialog');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Даты фотографий успешна изменены!</div>`+
+        `<img src="znak_ok.png" width="256">`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
+        `</div></div>`;
+}
+
+function zapros_date_file() {    
+    let mas = new Array();
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let check=document.getElementById(element.dataset.id_check).dataset.flag;
+        if(check==="true"){
+            mas.push({id:element.dataset.id, shablon:element.dataset.shablon});
+        }
+        });
+    zaprosPOST({'oper': 'date_file', 'mas':`${JSON.stringify(mas)}`}, otvet_date_file);    
+}
+
+function otvet_date_file(objJSON) {
     console.dir(objJSON);
-    let grid_data='<div>Фото</div><div>Дата</div><div>Вывод даты по шаблону</div>\n';
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let check=document.getElementById(element.dataset.id_check).dataset.flag;
+        if(check==="true"){
+            objJSON.forEach((item)=>{
+                if(item.id===element.dataset.id){
+                    let shablon=element.dataset.shablon;
+                    let milsec=item.time;
+                    element.dataset.time=milsec;
+                    element.innerText=`${DateInStrFormat(milsec,TIME_FORMAT_MAS[Number(shablon)])}`;
+               
+                }
+            });
+        }
+    });
+} 
+
+function  add_date_fotos_form(objJSON) {
+    let grid_data='<div>Фото</div><div>Дата</div><div style="background-color:white">'+
+    '<img src="check.png" draggable="false" onclick="chas_kor_time_chesk_all.bind(this)();"  style="width: 100%; opacity: 0%; height: 100%;">'+
+    '</div><div>Вывод даты по шаблону</div>\n';
+    
     objJSON.forEach(foto => {
-        let list='<select size="1">';
+        let list=`<select size="1" id="shablon_${foto.id}" onchange="chas_kor_shablon.bind(this)()">`;
+        let t_shablon=0;
+        let shablon=Number(foto.time_shablon);
         for(format of TIME_FORMAT_MAS){
-           list=list+`<option>${DateInStrFormat(foto.time,format)}</option>`;
+            if(shablon==t_shablon){
+                list=list+`<option selected>${DateInStrFormat(foto.time,format)}</option>`;
+            }else{
+                list=list+`<option>${DateInStrFormat(foto.time,format)}</option>`;}
+            t_shablon=t_shablon+1;
         }
         list=list+'</select>';
-        grid_data=grid_data+`<div><img src="${foto.fould}${foto.foto}" style="max-height: 4vh; " /></div><div>${foto.date}</div><div>${list}</div>\n`;
+        grid_data=grid_data+`<div><img src="${foto.fould}${foto.foto}" style="max-height: 4vh; " />`+
+        `</div><div class="time_s" data-id="${foto.id}" data-id_check="chesk_${foto.id}" data-id_shablon="shablon_${foto.id}" data-shablon="${foto.time_shablon}" data-time="${foto.time}" data-time_format="${foto.time_shablon}">${foto.date}`+
+                            `</div><div style="background-color:white">`+
+                            `<img src="check.png" class="time_check" id="chesk_${foto.id}" draggable="false" onclick="chas_kor_time_chesk.bind(this)();"  style="width: 100%; opacity: 0%; height: 100%;">`+
+                            `</div><div>${list}</div>\n`;
     });
     let mas_chas= Array('-12','-11','-10','-9','-8','-7','-6','-5','-4','-3','-2','-1','0'
-                                ,'+1','+2','+3','+4','+5','+6','+7','+8','+9','+10','+11','+1');
-    let chas_list='<select>';
+                                ,'+1','+2','+3','+4','+5','+6','+7','+8','+9','+10','+11','+12');
+    let chas_list='<select id="select_chas_kor" onchange="chas_kor_time(this.selectedIndex)">';
     mas_chas.forEach((element, index)=>{
         if(index==12)
-          chas_list=chas_list+`<option selected >${element}</option>`; 
+          chas_list=chas_list+`<option value="${element}" selected >${element}</option>`; 
         else
-          chas_list=chas_list+`<option>${element}</option>`;
+          chas_list=chas_list+`<option value="${element}" >${element}</option>`;
     });
     chas_list=chas_list+'</select>';
+    let mas_shablon= Array('день, число месяц ГГГГ, ЧЧ:ММ',
+                            'год','месяц год','число месяц год',
+                            'день, число месяц ГГГГ');
+    let shab_list='<select id="select_shab_kor" onchange="kor_shablon(this.selectedIndex)">';
+    mas_shablon.forEach((element, index)=>{
+        if(index==0)
+          shab_list=shab_list+`<option value="${element}" selected >${element}</option>`; 
+        else
+        shab_list=shab_list+`<option value="${element}" >${element}</option>`;
+    });
+    shab_list=shab_list+'</select>';
     var info=document.getElementById('dialog');
+
     info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Изменение даты `+
         `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
-        `<div class="div_form_fotos"><input type="datetime-local" id="date_new"></input>Корректировка часового пояса ${chas_list}</div>`+
+        `<div class="div_form_fotos">`+
+        `<img style="margin: 0 5px" src="info_exif.png" class="info_vir_albom_button" onclick="zapros_date_file()" title="Дату из свойства файла"/>`+
+        `<label style="margin: 0 5px">Задать дату<input type="datetime-local" id="date_new" onchange="kor_date(this.value)"/></label>`+
+        `<label style="margin: 0 5px">Корректировка шаблона ${shab_list}</label>`+
+        `<label style="margin: 0 5px">Корректировка часового пояса ${chas_list}</label></div>`+
         `<div style="text-shadow: none; background-color: aliceblue;  height: 30vh; overflow: auto;"><div id="grid_fotos_date" >${grid_data}</div></div>`+
        
-        `<button  onclick="zapros_admin_add_date_for_foto(${objJSON[0].fould_id}, document.getElementById('date_new').value)">Изменить</button>`+        
+        `<button  onclick="chas_kor_insert()">Изменить</button>`+        
         `</div></div>`;
 }
 

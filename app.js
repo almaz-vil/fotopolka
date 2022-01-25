@@ -132,6 +132,14 @@ const serverAdmin=http.createServer(
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, fotoalbom.AddTimeForFoto(js.id_foto, js.date));
                             break;
+                        case (oper.match(/ad_date_for_fotos/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, fotoalbom.AddTimeForFotos(js.mas));
+                            break;
+                        case (oper.match(/date_file/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, admin.InfoTimeForFile(js.mas));
+                            break;
                         
                     }
                 });
