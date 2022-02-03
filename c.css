@@ -117,7 +117,35 @@ button:hover{
 
  #info_vir_albom_img {
   width:10vw;
-  max-height: 16vh;
+  max-height: 8rem;
+}
+
+#grid_fotos_date{
+  text-shadow: none;
+  background-color: aliceblue;
+  height: 80vh; 
+  margin-bottom: 2rem;
+  overflow: auto;
+}
+
+#grid_fotos_date::-webkit-scrollbar {
+  width: 25px;
+}
+
+#grid_fotos_date::-webkit-scrollbar-track {
+  -webkit-box-shadow: 5px 5px 5px -5px rgba(34, 60, 80, 0.2) inset;
+  background-color: #f9f9fd;
+}
+
+#grid_fotos_date::-webkit-scrollbar-thumb {
+  background-color: #f2bf93;
+  background-image: -webkit-linear-gradient(45deg,rgba(255, 255, 255, .25) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, .25) 50%,
+                    rgba(255, 255, 255, .25) 75%,
+                    transparent 75%,
+                    transparent);
 }
  .info_vir_albom_button{
   border: black 2px solid;
@@ -175,6 +203,9 @@ button:hover{
   border-radius: 0.2rem;
   border-color: chocolate;
   padding: .5rem;
+  max-height: 8rem;
+  display: flex;
+  align-items: end;
 }
 
 .menu_admin_osn{
@@ -325,6 +356,11 @@ button:hover{
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
+}
+
+#albom_admin_foto{
+  max-height: 70vh;
+  overflow: auto;
 }
 
 .albom{

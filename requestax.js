@@ -506,6 +506,33 @@ function chas_kor_insert_otvet(objJSON) {
         `</div></div>`;
 }
 
+
+function zapros_rotate_file() {    
+    let mas = new Array();
+    let mas_times=new Array();
+    mas_times=document.querySelectorAll('.time_s');
+    mas_times.forEach((element)=>{
+        let check=document.getElementById(element.dataset.id_check).dataset.flag;
+        if(check==="true"){
+            mas.push({id:element.dataset.id, shablon:element.dataset.shablon});
+        }
+        });
+    zaprosPOST({'oper': 'rotate_file', 'mas':`${JSON.stringify(mas)}`}, otvet_rotate_file);    
+}
+
+function otvet_rotate_file(objJSON) {
+    console.dir(objJSON);
+    objJSON.forEach((item)=>{
+        let element=document.getElementById(`imgdd_${Number(item.id)}`);
+        let t=new Date();
+        let src=`${element.src}?${t.getTime()}`;
+        element.src=src;
+        let chesk=document.getElementById(`chesk_${Number(item.id)}`);
+        chesk.style.opacity="0";
+        });
+} 
+
+
 function zapros_date_file() {    
     let mas = new Array();
     let mas_times=new Array();
@@ -520,7 +547,6 @@ function zapros_date_file() {
 }
 
 function otvet_date_file(objJSON) {
-    console.dir(objJSON);
     let mas_times=new Array();
     mas_times=document.querySelectorAll('.time_s');
     mas_times.forEach((element)=>{
@@ -556,7 +582,7 @@ function  add_date_fotos_form(objJSON) {
             t_shablon=t_shablon+1;
         }
         list=list+'</select>';
-        grid_data=grid_data+`<div><img src="${foto.fould}${foto.foto}" style="max-height: 4vh; " />`+
+        grid_data=grid_data+`<div><img src="${foto.fould}${foto.foto}" id="imgdd_${foto.id}" class="time_s_img" style="max-height: 4vh; " />`+
         `</div><div class="time_s" data-id="${foto.id}" data-id_check="chesk_${foto.id}" data-id_shablon="shablon_${foto.id}" data-shablon="${foto.time_shablon}" data-time="${foto.time}" data-time_format="${foto.time_shablon}">${foto.date}`+
                             `</div><div style="background-color:white">`+
                             `<img src="check.png" class="time_check" id="chesk_${foto.id}" draggable="false" onclick="chas_kor_time_chesk.bind(this)();"  style="width: 100%; opacity: 0%; height: 100%;">`+
@@ -589,11 +615,12 @@ function  add_date_fotos_form(objJSON) {
         `<div class="form_caption">Изменение даты `+
         `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
         `<div class="div_form_fotos">`+
+        `<img style="margin: 0 5px" src="rotate.png" class="info_vir_albom_button" onclick="zapros_rotate_file()" title="Поворот фотографий 90"/>`+
         `<img style="margin: 0 5px" src="info_exif.png" class="info_vir_albom_button" onclick="zapros_date_file()" title="Дату из свойства файла"/>`+
         `<label style="margin: 0 5px">Задать дату<input type="datetime-local" id="date_new" onchange="kor_date(this.value)"/></label>`+
         `<label style="margin: 0 5px">Корректировка шаблона ${shab_list}</label>`+
         `<label style="margin: 0 5px">Корректировка часового пояса ${chas_list}</label></div>`+
-        `<div style="text-shadow: none; background-color: aliceblue;  height: 30vh; overflow: auto;"><div id="grid_fotos_date" >${grid_data}</div></div>`+
+        `<div id="grid_fotos_date" >${grid_data}</div>`+
        
         `<button  onclick="chas_kor_insert()">Изменить</button>`+        
         `</div></div>`;
@@ -783,6 +810,18 @@ function panel_admin() {
 function DateInStrFormat(milsec, format) {
 var date = new Date(Number(milsec));
 return  date.toLocaleString("ru", format);
+}
+
+function panel_alboms_resize(minus=true){
+    let d=document.getElementById('admin_grid');
+    let whe=d.style.gridTemplateColumns;
+    let zhach=256;//whe.split(' ')[0].split(px);
+    if(minus){
+        zhach=zhach/2;
+    }else{
+        zhach=zhach*2;
+    }
+    document.getElementById('admin_grid').style.gridTemplateColumns=`${zhach}px 1fr`;
 }
 
 function select_found(event) {

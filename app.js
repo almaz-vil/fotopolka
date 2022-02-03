@@ -83,10 +83,9 @@ http.createServer(
 
 const serverAdmin=http.createServer(
     function(request,response){
-        var param=request.url;
-        if(admin.file_check(param)){  request.addListener('end', function(){ serverf.serve(request,response); }).resume();}
+        if(admin.file_check(request.url)){  request.addListener('end', function(){ serverf.serve(request,response); }).resume();}
         else{
-            if(HeadlerParam(param, "POST")>-1){
+            if(HeadlerParam(request.url, "POST")>-1){
                 var body = '';
                 request.on('data', function (data) {
                     body += data;
@@ -139,6 +138,10 @@ const serverAdmin=http.createServer(
                         case (oper.match(/date_file/) || {}).input:
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, admin.InfoTimeForFile(js.mas));
+                            break;
+                        case (oper.match(/rotate_file/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, admin.RotateFile(js.mas));
                             break;
                         
                     }

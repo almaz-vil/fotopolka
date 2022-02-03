@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "gm": "^1.23.1",
     "kinda-exif": "^0.4.1",
     "node-static": "^0.7.11",
     "sqlite-sync": "^0.3.9",

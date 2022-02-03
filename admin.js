@@ -3,6 +3,7 @@
  */
 
  const fs = require("fs");
+ const gm = require('gm');
  const util = require("util");
 var pathModule=require("path");
 
@@ -393,15 +394,18 @@ class Admin {
         response.write(objson);
         response.end();
     }
+    
+
     /**
      * печать структуры страницы админки
      * @param response
      */
     panel_admin(response){
-       // this.panel_for_new_name_vir_fould(response);
         response.write('<div id="dialog"></div><div id="admin_grid">');
         response.write(`<div><div class="menu_admin_osn"><div>Работа с базой данных</div><div class="menu_admin_button" onclick="admin_panel_for_new_name_vir_fould()" style="background-image: url('new_albom.png')" title="Новый виртуальный альбом"></div>`+
             `<div class="menu_admin_button" onclick="zaprosPOST({'oper':'websocket'}, status_websocket); panel_admin()" style="background-image: url('config.png')"  title="Начальная настройка"></div>`+
+            `<div class="menu_admin_button" onclick="panel_alboms_resize()" style="background-image: url('resize_plus.png')"  title="Увеличить ширину"></div>`+
+            `<div class="menu_admin_button" onclick="panel_alboms_resize(false)" style="background-image: url('resize_minus.png')"  title="Уменьшить ширину"></div>`+
             ' </div></div>');
         response.write('<div class="head_admin"><h1>Административная часть ФОТОПОЛКИ</h1><div id="info_vir_albom" data-tag="-1"></div></div>');
         response.write('<div class="admin_albom">');
@@ -548,6 +552,31 @@ class Admin {
                 let path_file=pathModule.join(__dirname,`${element.fould}${element.name}`);
                 let info_file=fs.statSync(path_file);                 
                 objJSON.push({id:`${element.id}`, time:`${info_file.mtimeMs}` });
+            });
+           
+        });        
+        return JSON.stringify(objJSON);
+    }
+    
+    RotateFile(mas){
+        let objJSON = new Array();
+        let mass=JSON.parse(mas);
+        mass.forEach((item)=>{
+            let sql = `SELECT file.name AS name, file.time AS time, file.id AS id, fould.name AS fould FROM file, fould WHERE ((file.id_fould=fould.id) AND (file.id=?))`;
+            let m = new Array();
+            m=this.sqlite.run(sql, [item.id]);
+            m.forEach(element => {
+                let path_file=pathModule.join(__dirname,`${element.fould}${element.name}`);                
+                gm(path_file)
+                .rotate('black',90)
+                .write(path_file, function (err) {
+                    if (err){console.dir(err);}
+                  });
+                //Обновить время изменения файла      
+                let at= new Date( Number(element.time));
+                fs.utimesSync(path_file,at,at);
+
+                objJSON.push({id:`${element.id}`, fould:`${element.fould}`, file:`${element.file}` });
             });
            
         });        
