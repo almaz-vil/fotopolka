@@ -126,7 +126,7 @@ class Admin {
                 name:`${fouldname}`,
                 id_vir_fould:`${id_vir_fould}`,
                 date: this.TimeToStr(foto.time, foto.time_shablon),
-                time_shablon:`${time_shablon}`
+                time_shablon:`${foto.time_shablon}`
             };
             JSONMas.push(fotot);
         }
@@ -583,7 +583,17 @@ class Admin {
         return JSON.stringify(objJSON);
     }
 
-
+    AddComment(id_file){
+        let files = new Array();
+        files=this.sqlite.run('SELECT comment FROM file WHERE id=?', [id_file]);
+        let a=files[0].comment;
+        let comment = (a !== null && a !== undefined) ? a : "";
+        let objJSON={
+            comment:`${comment}`,
+            foto_id:`${id_file}`
+        }
+        return JSON.stringify(objJSON);
+    }
     /**
      * EXIF  для лога
      * @param {фото} id_file 

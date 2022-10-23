@@ -103,6 +103,9 @@ function zapros_fotoalbom(id_fould) {
 function zapros_info_exif(id_file) {
     zaprosPOST({"id_foto": id_file, "oper": "info_exif"}, info_exif);
 }
+function zapros_comment(id_file) {
+    zaprosPOST({"id_foto": id_file, "oper": "add_comment"}, add_comment);
+}
 
 
 
@@ -174,7 +177,16 @@ function open_foto_next(objJSON){
     document.getElementById('fotonext').dataset.id_foto=objJSON.id;
     document.getElementById('fotonext').dataset.foto=objJSON.name;
     document.getElementById('fotonext').dataset.fould=objJSON.fould;
-    document.getElementById('date').innerHTML=`"${objJSON.caption}" ${objJSON.data}`;
+    if(objJSON.comment){
+        if (objJSON.comment.length=0)
+            document.getElementById('date').innerHTML=`"${objJSON.caption}" ${objJSON.data}`
+        else
+            document.getElementById('date').innerHTML=`${objJSON.comment}`
+    }
+    else
+        document.getElementById('date').innerHTML=`"${objJSON.caption}" ${objJSON.data}`
+        
+    
 }
 function delete_vir_albom(objJSON){
     var response=document.getElementById('dialog');
@@ -326,6 +338,33 @@ function info_exif(objJSON){
         `</div></div>`;
 }
 
+
+function zapros_admin_add_comment(id_file, comment) {
+    zaprosPOST({"id_foto": id_file, "comment":comment, "oper": "comment_add_for_foto"}, add_comment_for_foto_otvet);
+}
+
+function add_comment_for_foto_otvet(objJSON) {
+    console.dir(objJSON);
+    var response=document.getElementById('dialog');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Комментарии к фотографии успешна изменены!</div>`+
+        `<img src="znak_ok.png" width="256">`+
+        `На "${objJSON.comment}"!`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
+        `</div></div>`;
+    
+}
+
+function add_comment(objJSON){
+    let info=document.getElementById('dialog');
+    info.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Комментарий к фото`+
+        `<div class="close" id="button_close" onclick="document.getElementById('new_name_vir_fould').style.display='none'">X</div></div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 80vh; overflow:auto;"><textarea id="add_comment">${objJSON.comment}</textarea></div>`+
+        `<button  onclick="zapros_admin_add_comment(${objJSON.foto_id}, document.getElementById('add_comment').value)">Изменить</button>`+
+        `</div></div>`;
+}
+
 function zapros_admin_add_date_for_foto(id_file, date) {
     zaprosPOST({"id_foto": id_file, "date":date, "oper": "add_date_for_foto"}, add_date_for_foto_otvet);
 }
@@ -360,6 +399,7 @@ function info_admin_foto(objJSON){
     let info=document.getElementById('info_vir_albom');
     info.innerHTML=`<img src="${objJSON.fould}${objJSON.file}" id="info_vir_albom_img"/>`+
                     `<img src="info_exif.png" class="info_vir_albom_button" onclick="zapros_info_exif(${objJSON.id})"/>`+
+                    `<img src="add_comment.png" class="info_vir_albom_button" onclick="zapros_comment(${objJSON.id})"/>`+
                     `${objJSON.date}`;
     
 }

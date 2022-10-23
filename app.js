@@ -127,9 +127,17 @@ const serverAdmin=http.createServer(
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, admin.InfoEXIF(js.id_foto));
                             break;
+                        case (oper.match(/add_comment/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, admin.AddComment(js.id_foto));
+                            break;
                         case (oper.match(/add_date_for_foto/) || {}).input:
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, fotoalbom.AddTimeForFoto(js.id_foto, js.date));
+                            break;
+                        case (oper.match(/comment_add_for_foto/) || {}).input:
+                            var js=JSON.parse(body);
+                            admin.ResponeJSON(response, fotoalbom.AddCommentForFoto(js.id_foto, js.comment));
                             break;
                         case (oper.match(/ad_date_for_fotos/) || {}).input:
                             var js=JSON.parse(body);

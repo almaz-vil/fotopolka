@@ -186,6 +186,17 @@ class Fotoalmom {
         
     }
 
+    AddCommentForFoto(id_foto, comment){
+        console.dir(`Commernt ${comment}`);
+        this.sqlite.run('UPDATE file SET comment=? WHERE id=?', [comment, id_foto]);
+        let foto={
+            'comment':comment,
+            'id':id_foto
+        };
+        return JSON.stringify(foto);
+        
+    }
+
     AddTimeForFotos(mas){
         let mass= new Array()
         mass=JSON.parse(mas);
@@ -284,7 +295,7 @@ class Fotoalmom {
             fould = this.sqlite.run('SELECT name FROM fould WHERE id=?', [id_fould]);
             var fouldname = fould[0].name;
             var files = new Array();
-            files = this.sqlite.run(`SELECT id, name, time, time_shablon FROM file WHERE id_fould=?`, [id_fould]);
+            files = this.sqlite.run(`SELECT id, name, time, time_shablon, comment FROM file WHERE id_fould=?`, [id_fould]);
             for (var i = 0; i < files.length; i+=1) {
                 if (files[i].id == id_foto) {
                     switch (naprav) {
@@ -304,14 +315,15 @@ class Fotoalmom {
                         caption:this.CaptionAlbom(fouldname),
                         vir_fould:id_vir_fould,
                         data: this.TimeToStr(files[i].time, files[i].time_shablon),
-                        time: files[i].time
+                        time: files[i].time,
+                        comment: files[i].comment
                     });
                 }
             }
         } else {
             var fould = new Array();
             fould = this.sqlite.run('SELECT name FROM vir_fould WHERE id=?', [id_vir_fould]);
-            let sql = `SELECT file.name, file.time, file.id, file.time_shablon, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
+            let sql = `SELECT file.name, file.comment file.time, file.id, file.time_shablon, fould.name AS fould  FROM vir_file, file, fould WHERE ((vir_file.id_file=file.id) AND (file.id_fould=fould.id) AND (vir_file.id_vir_fould=?))`;
             var files = new Array();
             files=this.sqlite.run(sql, [id_vir_fould]);
             for (var i = 0; i < files.length; i+=1) {
@@ -330,7 +342,8 @@ class Fotoalmom {
                         fould: files[i].fould,
                         caption: fould[0].name,
                         vir_fould: id_vir_fould,                        
-                        data: this.TimeToStr(files[i].time, files[i].time_shablon)
+                        data: this.TimeToStr(files[i].time, files[i].time_shablon),
+                        comment: files[i].comment,
                     };
                     return JSON.stringify(objJSON);
                 }
