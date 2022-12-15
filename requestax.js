@@ -668,8 +668,8 @@ function  add_date_fotos_form(objJSON) {
 
 function alboms_print_admin(objJSON){
 
-    var text=`<div class="ziro"><button onblur="this.style.color='black';" onkeydown="keydown(event)" onfocus="this.style.color='red';" tabindex="0" onclick="pplus()">+</button>`+
-        `<div class="caption">${objJSON[0].name}</div> <button onblur="this.style.color='black';" onkeydown="keydown(event)" onfocus="this.style.color='red';" tabindex="0" onclick="mminus()">-</button><br></div>` +
+    var text=`<div class="ziro"><button onclick="pplus()">+</button>`+
+        `<div class="caption">${objJSON[0].name}</div> <button onclick="mminus()">-</button><br></div>` +
         //`<div class="ziro"> </div> `+
         '<div id="albom_admin_foto">';
     let info= document.getElementById('info_vir_albom');
@@ -680,21 +680,11 @@ function alboms_print_admin(objJSON){
     for( let foto of objJSON){
         var op="0";
         if(foto.chesk){op="0.75";}
-        text=text+`<div  class="polka"><div class="albom" style="background-image: url('${foto.fould}${foto.foto}'); background-position: bottom; background-repeat:no-repeat; background-size: contain;"><img tabindex="0" onfocus="this.style.opacity='50';" onblur="this.style.opacity='0';" src="check.png" draggable="false" data-id_vir_albom="${info.dataset.tag}" data-id_foto="${foto.id}" onkeydown="console.log('keydown');"  onclick="let g=check.bind(this); g();"  style="width: 100%; opacity: ${op}; height: 100%;"></div></div>`;
+        text=text+`<div  class="polka"><div class="albom" style="background-image: url('${foto.fould}${foto.foto}'); background-position: bottom; background-repeat:no-repeat; background-size: contain;"><img src="check.png" draggable="false" data-id_vir_albom="${info.dataset.tag}" data-id_foto="${foto.id}" onkeydown="console.log('keydown');"  onclick="let g=check.bind(this); g();"  style="width: 100%; opacity: ${op}; height: 100%;"></div></div>`;
     }
     text=text+'</div>';
     var albom=document.getElementById('albom_admin');
     albom.innerHTML=text;
-}
-function keydown(event) {
-
-    console.debug(" key = {} па {}", event.keyCode, event.key);
-    if(event.key==="ArrowRight"){
-        this.onblur();
-        console.debug("Right")    }
-    if(event.key==="ArrowLeft"){
-            console.debug("Left")    }
-            
 }
 function alboms_vir_print_admin(objJSON){
     var text="";
