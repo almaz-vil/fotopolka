@@ -404,8 +404,9 @@ class Admin {
         response.write('<div id="dialog"></div><div id="admin_grid">');
         response.write(`<div><div class="menu_admin_osn"><div>Работа с базой данных</div><div class="menu_admin_button" onclick="admin_panel_for_new_name_vir_fould()" style="background-image: url('new_albom.png')" title="Новый виртуальный альбом"></div>`+
             `<div class="menu_admin_button" onclick="zaprosPOST({'oper':'websocket'}, status_websocket); panel_admin()" style="background-image: url('config.png')"  title="Начальная настройка"></div>`+
-            `<div class="menu_admin_button" onclick="panel_alboms_resize()" style="background-image: url('resize_plus.png')"  title="Увеличить ширину"></div>`+
-            `<div class="menu_admin_button" onclick="panel_alboms_resize(false)" style="background-image: url('resize_minus.png')"  title="Уменьшить ширину"></div>`+
+            `<div class="menu_admin_button" onclick="panel_alboms_resize()" style="background-image: url('resize_minus.png')"  title="Увеличить ширину"></div>`+
+            `<div class="menu_admin_button" onclick="panel_alboms_resize(false)" style="background-image: url('resize_plus.png')"  title="Уменьшить ширину"></div>`+
+            `<div class="menu_admin_button" onclick="zapros_virtual_in_real()" style="background-image: url('vir_in_real.png')"  title="Виртуальные в реальные"></div>`+
             ' </div></div>');
         response.write('<div class="head_admin"><h1>Административная часть ФОТОПОЛКИ</h1><div id="info_vir_albom" data-tag="-1"></div></div>');
         response.write('<div class="admin_albom">');
@@ -418,6 +419,10 @@ class Admin {
         response.write('</div>')
     }
 
+    zapros_vir_in_real(){
+        
+    }
+    
     /**
      * Очистка базы данных
      */
@@ -581,6 +586,21 @@ class Admin {
            
         });        
         return JSON.stringify(objJSON);
+    }
+
+    VirInReal(){
+        const { execSync } = require("child_process");
+
+            
+        let objJSON={
+            result:'ok'
+        }
+        objJSON.result=execSync("./fotoalbom_vir_in_real").toString();
+        console.log("{}", objJSON.result);
+        return JSON.stringify(objJSON)
+            
+
+         
     }
 
     AddComment(id_file){

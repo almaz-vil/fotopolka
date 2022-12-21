@@ -107,7 +107,19 @@ function zapros_comment(id_file) {
     zaprosPOST({"id_foto": id_file, "oper": "add_comment"}, add_comment);
 }
 
+function zapros_virtual_in_real() {
+    zaprosPOST({"oper": "vir_in_real"}, virtual_in_real);
+}
 
+function virtual_in_real(objJSON){
+    var response=document.getElementById('dialog');
+    response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
+        `<div class="form_caption">Виртуальный альбом удалён, реальные папки созданы!</div>`+
+        `<img src="znak_ok.png" width="128">`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 50vh; overflow:auto;" id="log_error" ><pre>${objJSON.result}</pre></div>`+
+        `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
+        `</div></div>`;
+}
 
 function albom_vir_print(objJSON){
     if (objJSON.length==0) return;
@@ -203,7 +215,6 @@ function delete_vir_albom(objJSON){
     document.getElementById(`vir_albom_${objJSON.id}`).style.display="none";
     var albom=document.getElementById('albom_admin');
     albom.innerHTML="";
-
 
 }
 function pplus(albom=document.getElementById('albom_admin').getElementsByClassName('albom')){

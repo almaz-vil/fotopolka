@@ -151,6 +151,9 @@ const serverAdmin=http.createServer(
                             var js=JSON.parse(body);
                             admin.ResponeJSON(response, admin.RotateFile(js.mas));
                             break;
+                        case (oper.match(/vir_in_real/) || {}).input:
+                            admin.ResponeJSON(response, admin.VirInReal());
+                            break;
                         
                     }
                 });
