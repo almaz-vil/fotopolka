@@ -18,12 +18,19 @@ struct Foto {
 }
 fn main()->Result<(), std::io::Error> {
     let start = Instant::now();
+
+    #[cfg(target_os = "linux")]
+    println!("Привет, Linux!");
+    #[cfg(not(target_os = "linux"))]
+    println!("Привет, Windows!");
     println!("Сканирование...\n");
     let mut fotos= Vec::new();
     let mut not_fotos= Vec::new();
     
     let semver=regex::Regex::new(r"(\w*)(.jpg|.JPG|.jpeg|.JPEG|.png|.jpg|.JPG|.jpeg|.JPEG|.png)").unwrap();    
-    for entry_result in WalkDir::new("./foto/") {
+
+    let dir_scan = "./foto/".to_string();
+    for entry_result in WalkDir::new(dir_scan) {
       let entry=entry_result?;            
       let d=entry.path();
       if entry.file_type().is_file(){
@@ -45,7 +52,10 @@ fn main()->Result<(), std::io::Error> {
     
     for (_i, val) in fotos.iter().enumerate(){
       let value =Path::new(val);
-      let fould= value.parent().unwrap().to_string_lossy().into_owned()[2..].to_string()+r"/";
+      #[cfg(target_os = "linux")] 
+      let  fould= value.parent().unwrap().to_string_lossy().into_owned()[2..].to_string()+r"\";
+      #[cfg(not(target_os = "linux"))]
+      let fould= value.parent().unwrap().to_string_lossy().into_owned()[2..].to_string().replace(r"\", r"/")+r"/" ;// Замена "\" на "/"
       let filename=value.file_name().unwrap().to_string_lossy().into_owned();
       if arrayfould.contains(&fould){
         for (_id, co) in arrayfoud.iter_mut().enumerate(){
@@ -58,7 +68,7 @@ fn main()->Result<(), std::io::Error> {
         
         arrayfoud.push(Fould {id: (countfould), count: (1), name: (fould) });
         }
-        arrayfotos.push(Foto{id_fould: (countfould),name: (filename)});
+      arrayfotos.push(Foto{id_fould: (countfould),name: (filename)});
     }
     //Сохранение в базе данных
 
