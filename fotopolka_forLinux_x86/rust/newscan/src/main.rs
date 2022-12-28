@@ -53,7 +53,7 @@ fn main()->Result<(), std::io::Error> {
     for (_i, val) in fotos.iter().enumerate(){
       let value =Path::new(val);
       #[cfg(target_os = "linux")] 
-      let  fould= value.parent().unwrap().to_string_lossy().into_owned()[2..].to_string()+r"\";
+      let  fould= value.parent().unwrap().to_string_lossy().into_owned()[2..].to_string()+r"/";
       #[cfg(not(target_os = "linux"))]
       let fould= value.parent().unwrap().to_string_lossy().into_owned()[2..].to_string().replace(r"\", r"/")+r"/" ;// Замена "\" на "/"
       let filename=value.file_name().unwrap().to_string_lossy().into_owned();
