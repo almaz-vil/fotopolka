@@ -689,149 +689,46 @@ class Admin {
         return {time:data.getTime(), todate: data.toDateString(),format:nomer}; 
     }
 
-
     Websoket(WebSocket, server){
         if (this.websokcet) {
             const ws = new WebSocket({
                 httpServer: server,
                 autoAcceptConnections: false
-            });
-            ws.on('request', req => {
+            }
+        );
+        ws.on('request', req => {
                 const connection = req.accept('', req.origin);
                 connection.on('message', message => {
                     const dataName = message.type + 'Data';
                     const oper = message[dataName];
+                    const { spawn } = require("child_process");                                     
+                    let readjpg;
                     switch (oper) {
                         case (oper.match(/Efi/) || {}).input:
-                            var count = new Array();
-                            count=this.sqlite.run('SELECT COUNT(file.id) AS cou FROM file, fould WHERE file.id_fould=fould.id');
-                            const len=count[0].cou;
-                            connection.send(len);
-                            if (len>200){
-                                const limmit=200;
-                                const skip=200;
-                                for(let sk=0; sk<len; sk=sk+skip){
-                                    let files = new Array();
-                                    files=this.sqlite.run('SELECT file.id AS id, file.name AS file_name, fould.name AS fould_p FROM file, fould WHERE file.id_fould=fould.id LIMIT ?, ?',[sk,limmit]);
-                                    for (let file of files){
-                                        let image;
-                                        try {
-                                            image= new ExifI({image: pathModule.join(__dirname,`${file.fould_p}${file.file_name}`)})
-                                            let objJSON=this.StringInDateTime(image.exifData.exif.DateTimeOriginal, file.file_name);
-                                            this.sqlite.run('UPDATE file SET time=?, time_shablon=? WHERE id=?',[objJSON.time, objJSON.format, file.id]);
-                                            let objJson ={
-                                                file:`${file.fould_p}${file.file_name}`,
-                                                error:``,
-                                                date:`${objJSON.todate}`
-                                            }
-                                            connection.send(JSON.stringify(objJson));
-     
-                                        } catch (error) {
-                                            connection.send(JSON.stringify({file:`${file.fould_p}${file.file_name}`, error:`${error.message}`,date:'-' }));
-            
-                                        }                                        
-                                    }
-                                    files=null;    
-                                }
-                            }
-                            else{
-                                let files = new Array();
-                                files=this.sqlite.run('SELECT file.id AS id, file.name AS file_name, fould.name AS fould_p FROM file, fould WHERE file.id_fould=fould.id');
-                                    for (let file of files){
-                                        let image;
-                                        try {
-                                            image= new ExifI({image: pathModule.join(__dirname,`${file.fould_p}${file.file_name}`)})
-                                            let objJSON=this.StringInDateTime(image.exifData.exif.DateTimeOriginal, file.file_name);
-                                            this.sqlite.run('UPDATE file SET time=?, time_shablon=? WHERE id=?',[objJSON.time, objJSON.format, file.id]);
-                                            let objJson ={
-                                                file:`${file.fould_p}${file.file_name}`,
-                                                error:``,
-                                                date:`${objJSON.todate}`
-                                            }
-                                            connection.send(JSON.stringify(objJson));
-     
-                                        } catch (error) {
-                                            connection.send(JSON.stringify({file:`${file.fould_p}${file.file_name}`, error:`${error.message}`,date:'-' }));
-   
-                                        }
-                                        
-                                    }
-                                files=null;
-                            }
-
-                            connection.send('exit_');
-                            break;
-                        case (oper.match(/scan/) || {}).input:
-                            
-                        /*
-                            const sqlite =this.sqlite;                                                
-                            sqlite.run('DELETE FROM file');
-                            sqlite.run('DELETE FROM fould');
-                            sqlite.run('DELETE FROM vir_file');
-                            sqlite.run('DELETE FROM vir_fould');
-                            sqlite.run("UPDATE sqlite_sequence SET seq=0 WHERE name='fould'");
-                            sqlite.run("UPDATE sqlite_sequence SET seq=0 WHERE name='file'");
-                            let arr_files = Array();
-                            arr_files=this.getFiles('foto');
-                            let arr_not= new Array();
-                            arr_not=arr_files.filter(this.file_check_not);
-                            if(arr_not.length>0){
-                                console.log(`Файлы не являются фотографиями:\n`);
-                                arr_not.forEach((value, index)=>console.log(`\t${index}.'${value}'\n`));
-                            }
-                            console.log('\nОбрабатывается:\n');
-                            let arr = new Array();
-                            arr=arr_files.filter(this.file_check_1);                           
-                            connection.send(arr.length);
-                            let countFoto=0;
-                            let countFould=0;
-                            let arrayFoto = new Array();
-                            let arrayFould = new Array();                           
-                            arr.forEach(value=>{
-                                let str_mas=value.split('/');
-                                let file_name=str_mas.pop();
-                                let fould=str_mas.join('/');
-                                if(arrayFould.find((item)=>item.name==fould)===undefined){
-                                    countFould=countFould+1;
-                                    countFoto=1;
-                                    arrayFould.push({id:countFould,name:fould,count:countFoto,id_tag:1});
-                                } else{
-                                    arrayFould.forEach(item=>{if(item.name===fould){item.count=item.count+1;}});
-                                }
-                                arrayFoto.push({name:file_name,id_fould:countFould});
-                            });
-
-                            arrayFould.forEach((item)=>{
-                                connection.send(JSON.stringify(item));
-                                this.sqlite.run('INSERT INTO fould (id, name, count, id_tag) VALUES(?, ?, ?, ?)', [item.id,item.name+'/',item.count,item.id_tag]);
-                                console.log(`Католог '${item.name}/'\t\tКоль-во фото ${item.count}\n`);                                
-                            }, this);
-
-                            arrayFoto.forEach((item)=>{
-                                this.sqlite.run('INSERT INTO file (name, id_fould) VALUES(?, ?)', [item.name, item.id_fould]);
-                            }, this);
-
-                            console.log(`У Вас ${arrayFould.length} альбомов с ${arrayFoto.length} фотографиями!`);
-                            connection.send('Звершена, запись в базу!')*/
-                            connection.send(10);
-                            const { spawn } = require("child_process");            
-                            
-                            const newscan = spawn('./newscan');
-                            newscan.stdout.on('data', (data) => {
-                                connection.send(data.toString());
-                              });
-                              
-                            newscan.stderr.on('data', (data) => {
-                                connection.send(data.toString());
-                              });
-                              
-                            newscan.on('close', (code) => {
-                                connection.send('exit_');
-                              }); 
-                           
+               
+                       readjpg = spawn('./readjpg');
+                       break;
+                        case (oper.match(/scan/) || {}).input:                   
+                          readjpg = spawn('./newscan');
+                         
                         break;
+                        default:
+                        connection.send('exit_');
                     }
-                });
+                    readjpg.stdout.on('data', (data) => {
+                        connection.send(data.toString());
+                      });
+                      
+                    readjpg.stderr.on('data', (data) => {
+                        connection.send(data.toString());
+                      });
+                      
+                    readjpg.on('close', (code) => {
+                        connection.send('exit_');
+                      }); 
+
+                }
+                );
 
                 connection.on('close', (reasonCode, description) => {
                 });
@@ -840,151 +737,6 @@ class Admin {
         this.websokcet=false;
         return JSON.stringify({info:'ok'});
     }
-
-    /**
-     * Загрузка в базу данный
-     * @param name_file имя файла со списком объектов файловой системы
-     * @param separator разделитель объектов в файле "," - по умолчанию
-     * @constructor
-     */
-    LoadList (name_file, separator=",") {
-        //let list_file = fs.readFileSync(name_file).toString().split(separator);
-        let arr = name_file;//fs.readFileSync("2.txt").toString().split(';');
-        var ds = new Array();
-        var fould=" ";
-        var countFoto=0;
-        var countFould=1;
-        var arrayFoto = new Array();
-        var arrayFould = new Array();
-        for(let i in arr){
-            ds=arr[i].split('/');
-            for (let j in ds){
-                var de=arr[i].lastIndexOf('/')+1;
-                var d=arr[i].substring(de, arr[i].len-de);
-                if (d==fould){ }
-                else {
-                    if (countFoto>0){
-                        console.log(`${fould} \tКоль-во фото ${countFoto}\n`);
-                        var gf =
-                            {':id': countFould,
-                                ':name': fould,
-                                ':count': countFoto,
-                                ':id_tag': 1
-                            }
-                        arrayFould.push(gf);
-                        /*/Чтение id fould
-                        let sql = `SELECT id, name FROM fould WHERE name=?`;
-                        let name = fould;
-                        db.get(sql, [name], function (err, row) {
-                              var id=row.id;
-                              console.log('ID_FOULD: ', id);
-                              console.log('NAME: ', row.name);
-                              var dfg=row.name.split('/');
-                              console.log('name: ', dfg[dfg.length-2]);
-                              var mas=dfg[dfg.length-2].split(' ');
-                              for(let v in mas){
-                                  //Запись тяга папки
-                                  var tag_fould = {':name': mas[v],':id_fould': id};
-                                  db.run('INSERT INTO tag (name, id_fould) VALUES(:name, :id_fould)',
-                                  tag_fould, (err) => { if(err) {return console.log(err.message); }})
-
-                              }
-
-                              arrayFoto.length=0;
-                              });
-**/
-                    }
-                    fould=d;
-                    countFould=countFould+1;
-
-                    countFoto=0;
-                }
-                if (this.    file_check(ds[j])) {
-                    countFoto=countFoto+1;
-                    arrayFoto.push({':name': ds[j],':id_fould': countFould});
-                }
-            }
-        }
-        for(let i in arrayFould){
-            this.sqlite.run('INSERT INTO fould (id, name, count, id_tag) VALUES(:id, :name, :count, :id_tag)',
-                arrayFould[i]);
-        }
-
-        //запись фотографий
-        for(let i in arrayFoto){
-            this.sqlite.run('INSERT INTO file (name, id_fould) VALUES(:name, :id_fould)',
-                arrayFoto[i]);
-
-        }
-        console.log(`${fould} \tКоль-во фото ${countFoto}\n`);
-
-    }
-   /**
-     let list_path = new Array();
-        let fould = " ";
-        var countFoto=0;
-        var countFould=1;
-        var arrayFoto = new Array();
-        var arrayFould = new Array();
-        for(var path_file of list_file){
-            list_path=path_file.split('/');
-            for (var file_name of list_path){
-                var de=path_file.lastIndexOf('/')+1;
-                var fould_temp=path_file.substring(de, path_file.len-de);
-                if (fould_temp===fould){ }
-                else {
-                    if (countFoto>0){
-                        console.log(`${fould} \tКоль-во фото ${countFoto}\n`);
-
-                        arrayFould.push({
-                            ':id': countFould,
-                            ':name': fould,
-                            ':count': countFoto,
-                            ':id_tag': 1
-                            });
-                        /*Чтение id fould
-                        let sql = `SELECT id, name FROM fould WHERE name=?`;
-                        let name = fould;
-                        db.get(sql, [name], function (err, row) {
-                              var id=row.id;
-                              console.log('ID_FOULD: ', id);
-                              console.log('NAME: ', row.name);
-                              var dfg=row.name.split('/');
-                              console.log('name: ', dfg[dfg.length-2]);
-                              var mas=dfg[dfg.length-2].split(' ');
-                              for(v in mas){
-                                  //Запись тяга папки
-                                  var tag_fould = {':name': mas[v],':id_fould': id};
-                                  db.run('INSERT INTO tag (name, id_fould) VALUES(:name, :id_fould)',
-                                  tag_fould, (err) => { if(err) {return console.log(err.message); }})
-
-                              }
-
-                              arrayFoto.length=0;
-                              });
-
-                    }
-                    fould=fould_temp;
-                    countFould=countFould+1;
-                    countFoto=0;
-                }
-                if (this.file_check(file_name)) {
-                    countFoto=countFoto+1;
-                    arrayFoto.push({':name': file_name,':id_fould': countFould});
-
-                }
-            }
-        }
-        for(let fould of arrayFould){
-            this.sqlite.run('INSERT INTO fould (id, name, count, id_tag) VALUES(:id, :name, :count, :id_tag)', fould);
-        }
-        //запись фотографий
-        for(let foto of arrayFoto){
-            this.sqlite.run('INSERT INTO file (name, id_fould) VALUES(:name, :id_fould)',foto);
-        }
-        //console.log(`${fould} \tКоль-во фото ${countFoto}\n`);
-    };
-    **/
 
 }
 

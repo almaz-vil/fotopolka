@@ -30,14 +30,19 @@ fn main()->Result<(), std::io::Error> {
     let semver=regex::Regex::new(r"(\w*)(.jpg|.JPG|.jpeg|.JPEG|.png|.jpg|.JPG|.jpeg|.JPEG|.png)").unwrap();    
 
     let dir_scan = "./foto/".to_string();
-    for entry_result in WalkDir::new(dir_scan) {
-      let entry=entry_result?;            
+    
+    for entry_result in WalkDir::new(dir_scan.clone()) {
+      let entry=match entry_result {
+              Ok(d)=>d,
+              Err(e)=>{ println!("Не нахожу каталог '{1}'!\n{0}\nРабота программы завершена.", e, dir_scan);
+                               exit(0)}
+          };
       let d=entry.path();
       if entry.file_type().is_file(){
-        if semver.is_match(d.to_string_lossy().into_owned().as_str()) {
-          fotos.push(d.to_string_lossy().into_owned());
+        if semver.is_match(d.to_string_lossy().into_owned().as_str()) && !d.to_string_lossy().into_owned().contains("\"") {           
+          fotos.push(d.to_string_lossy().into_owned());          
         }else {
-            not_fotos.push(entry.path().to_string_lossy().into_owned());
+          not_fotos.push(entry.path().to_string_lossy().into_owned());
          }
         }  
     
@@ -64,8 +69,7 @@ fn main()->Result<(), std::io::Error> {
         }
       }else{
         arrayfould.push(fould.clone());
-        countfould=countfould+1;
-        
+        countfould=countfould+1;        
         arrayfoud.push(Fould {id: (countfould), count: (1), name: (fould) });
         }
       arrayfotos.push(Foto{id_fould: (countfould),name: (filename)});
@@ -84,11 +88,11 @@ fn main()->Result<(), std::io::Error> {
     UPDATE sqlite_sequence SET seq=0 WHERE name='file'; BEGIN TRANSACTION;".to_string();
    
     for (_i, val) in arrayfoud.iter().enumerate(){
-      sql=sql+"INSERT INTO fould (id, name, count, id_tag) VALUES("+val.id.to_string().as_str()+",'"+val.name.as_str()+
-      "', "+val.count.to_string().as_str()+", "+"0"+"); ";
+      sql=sql+"INSERT INTO fould (id, name, count, id_tag) VALUES("+val.id.to_string().as_str()+",\""+val.name.to_string().as_str()+
+      "\", "+val.count.to_string().as_str()+", "+"0"+"); ";
     }
     for (_i, val) in arrayfotos.iter().enumerate(){
-        sql=sql+"INSERT INTO file (name, id_fould) VALUES('"+val.name.as_str()+"', "+val.id_fould.to_string().as_str()+"); ";
+        sql=sql+"INSERT INTO file (name, id_fould) VALUES(\""+val.name.as_str()+"\", "+val.id_fould.to_string().as_str()+"); ";
         }
     sql=sql+"COMMIT;";
     

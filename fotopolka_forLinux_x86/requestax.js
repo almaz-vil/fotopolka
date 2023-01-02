@@ -116,7 +116,7 @@ function virtual_in_real(objJSON){
     response.innerHTML=`<div id="new_name_vir_fould"> <div class="form">`+
         `<div class="form_caption">Виртуальный альбом удалён, реальные папки созданы!</div>`+
         `<img src="znak_ok.png" width="128">`+
-        `<div style="text-shadow: none; background-color: aliceblue;  height: 50vh; overflow:auto;  width: -webkit-fill-available;" id="log_error" ><pre>${objJSON.result}</pre></div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 50vh; overflow:auto;" id="log_error" ><pre>${objJSON.result}</pre></div>`+
         `<button id="new_name_button"  onclick="document.getElementById('new_name_vir_fould').style.display='none'">Хорошо!</button>`+
         `</div></div>`;
 }
@@ -750,7 +750,7 @@ var rounded = function(number){
     return +number.toFixed(2);
 }
 //WebSocket для админки
-function admin_websocket_client() {
+function admin_websocket_client_efi() {
     const webSocket = new WebSocket('ws://localhost:3001');
     let log_error = document.getElementById('log_error');
     let logg=document.getElementById('log');
@@ -758,42 +758,27 @@ function admin_websocket_client() {
     webSocket.onopen = event => {
         logg.innerText='';
         log_error.innerText='';
-        img_reload.style.display='block';
         document.getElementById('button_step_1').style.display='none';
         document.getElementById('button_step_2').style.display='none';
         document.getElementById('button_close').style.display='none';
+        img_reload.style.display='block';
         timer_init();
         webSocket.send("Efi");
     };
-    let nober=0;
-    let max_nober=0;
-    let count_error=0;
     webSocket.onmessage = event => {
-        if(max_nober==0){
-            max_nober=event.data;
-        } else {
-            if (event.data.indexOf(':') > -1) {
-                let objJSON = JSON.parse(event.data);
-                if (objJSON.date == '-') {
-                    log_error.innerText = `Файл ${objJSON.file} с ошибкой ${objJSON.error}! \x0a` + log_error.outerText;
-                    count_error = count_error + 1;
-                }
+            console.log(event.data);
+            switch (event.data) {
+                case (event.data.match(/exit_/) || {}).input:
+                    webSocket.close(1000);
+                    break;
+                default:
+                    log_error.innerText = log_error.outerText+event.data;
             }
-        }
-        if (count_error)
-            logg.innerHTML=`Из ${max_nober} обработано <b>${rounded((nober*100)/max_nober)}%</b>(${nober})! С ошибкой ${count_error}.`;
-        else
-            logg.innerHTML=`Из ${max_nober} обработано <b>${rounded((nober*100)/max_nober)}%</b>(${nober})! `;
-        if(max_nober==nober) {
-            timer_stop();
-            webSocket.close(1000);
-        }
-        nober=nober+1;
+        
     };
-
     webSocket.onclose = event => {
+        timer_stop();
         img_reload.style.display='none';
-        log_error.innerText = logg.outerText+'\x0a'+ log_error.outerText;
         logg.innerText='Спасибо, первоначальная настройка завершина!';
         document.getElementById('close').style.display='block';
     };
@@ -815,16 +800,14 @@ function admin_websocket_client_scan() {
         webSocket.send("scan");
     };
     webSocket.onmessage = event => {
-           switch (event.data) {
+            switch (event.data) {
                 case (event.data.match(/exit_/) || {}).input:
                     webSocket.close(1000);
                     break;
-                default:{
-                    logg.innerText = event.data;
-            log_error.innerText = log_error.outerText+`${event.data}` ;}
-        }
-       
-        //}
+                default:
+                    log_error.innerText = log_error.outerText+event.data;
+            }
+        
     };
     webSocket.onclose = event => {
         timer_stop();
@@ -847,10 +830,10 @@ function panel_admin() {
         `<img style="display:none;" class="loading" width="64px" id="imag_reload" src="reload.png"/>`+
         `<div id="timer">00:00</div>`+
         `<button id="button_step_1"  onclick="admin_websocket_client_scan();">Сканирование папки "foto"... (шаг 1)</button>`+
-        `<button id="button_step_2"  onclick="admin_websocket_client();">Создать временные метки...(шаг 2)</button>`+
+        `<button id="button_step_2"  onclick="admin_websocket_client_efi();">Создать временные метки...(шаг 2)</button>`+
         `<button id="close" style="display: none" onclick="document.getElementById('new_name_vir_fould').style.display='none'">Готово</button> `+
         `<div style="text-shadow: none; background-color: aliceblue;" id="log" ></div>`+
-        `<div style="text-shadow: none; background-color: aliceblue;  height: 10vh; overflow: auto; width: -webkit-fill-available;" id="log_error" ></div>`+
+        `<div style="text-shadow: none; background-color: aliceblue;  height: 10vh; overflow: auto;" id="log_error" ></div>`+
         `</div></div>`;
 
 }
