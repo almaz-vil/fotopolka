@@ -724,6 +724,8 @@ class Admin {
                       });
                       
                     readjpg.on('close', (code) => {
+                        this.sqlite.close();
+                        this.sqlite.connect('foalbom');
                         connection.send('exit_');
                       }); 
 
